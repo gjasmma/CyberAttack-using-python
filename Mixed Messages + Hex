@@ -1,0 +1,19 @@
+import random, time
+
+messages = [
+    "Scanning open ports...",
+    "Establishing secure channel...",
+    "Encrypting payload...",
+    "Deploying backdoor...",
+    "System compromised!"
+]
+
+def random_hex_line(length=12):
+    return " ".join(f"{random.randint(0,255):02x}" for _ in range(length))
+
+for msg in messages:
+    print(f"$ {msg}")
+    time.sleep(0.5)
+    for _ in range(3):  # 3 lines of hex after each message
+        print("$ " + random_hex_line())
+        time.sleep(0.2)
