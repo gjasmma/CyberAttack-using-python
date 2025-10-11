@@ -1,0 +1,17 @@
+def firewall_defense(user_input):
+    allowed_ports = [80, 443, 22, 8080]
+    suspicious_ports = [666, 1337, 31337]
+    try:
+        port = int(user_input)
+        if port in allowed_ports:
+            print('Port is secure. Access granted.')
+        elif port in suspicious_ports:
+            print('Suspicious port detected! Potential cyber attack.')
+        else:
+            print('Port not recognized.')
+    except ValueError:
+        print('Invalid input. Please enter a valid port number.')
+
+# Example usage:
+user_input = input("Enter a port number: ")
+firewall_defense(user_input)
