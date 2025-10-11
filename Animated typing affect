@@ -1,0 +1,24 @@
+import random, sys, time
+
+def type_out(text, delay=0.05):
+    for char in text:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(delay)
+    print()
+
+lines = [
+    "Initializing exploit...",
+    "Bypassing firewall...",
+    "Injecting payload...",
+    "Access granted!"
+]
+
+for line in lines:
+    type_out("$ " + line, delay=0.03)
+    time.sleep(0.4)
+
+# Add some random hex after
+for _ in range(5):
+    hex_line = " ".join(f"{random.randint(0,255):02x}" for _ in range(16))
+    type_out("$ " + hex_line, delay=0.002)
