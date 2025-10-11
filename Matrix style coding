@@ -1,0 +1,6 @@
+import random, time
+
+while True:
+    line = "".join(random.choice("0123456789abcdef") for _ in range(48))
+    print(line)
+    time.sleep(0.05)
