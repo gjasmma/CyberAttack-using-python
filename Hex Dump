@@ -1,0 +1,8 @@
+import random, time
+
+def random_hex_line(length=16):
+    return " ".join(f"{random.randint(0,255):02x}" for _ in range(length))
+
+for _ in range(20):  # number of lines
+    print("$ " + random_hex_line())
+    time.sleep(0.2)
