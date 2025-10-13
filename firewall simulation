@@ -1,0 +1,77 @@
+// Save as firewall-sim.js
+// Run: node firewall-sim.js
+
+const Action = { ALLOW: 'ALLOW', BLOCK: 'BLOCK' };
+
+class Rule {
+  constructor(name, regex, action) {
+    this.name = name;
+    this.regex = new RegExp(regex);
+    this.action = action;
+  }
+  matches(source) {
+    return this.regex.test(source);
+  }
+}
+
+class Firewall {
+  constructor() {
+    this.enabled = true;
+    this.rules = [];
+  }
+  setEnabled(enabled) {
+    this.enabled = enabled;
+  }
+  addRule(rule) {
+    this.rules.push(rule);
+  }
+  decide(source) {
+    if (!this.enabled) return Action.ALLOW;
+    for (const r of this.rules) {
+      if (r.matches(source)) {
+        console.log(`Rule '${r.name}' matched '${source}' -> ${r.action}`);
+        return r.action;
+      }
+    }
+    console.log(`No rule matched '${source}' -> ALLOW`);
+    return Action.ALLOW;
+  }
+  apply(source) {
+    const action = this.decide(source);
+    if (action === Action.BLOCK) {
+      console.log(`Blocking unauthorized traffic from: ${source}`);
+    } else {
+      console.log(`Allowing traffic from: ${source}`);
+    }
+  }
+}
+
+// Setup rules
+const fw = new Firewall();
+fw.addRule(new Rule('Block local gateway', '^192\\.168\\.1\\.1$', Action.BLOCK));
+fw.addRule(new Rule('Block office router', '^10\\.0\\.0\\.1$', Action.BLOCK));
+fw.addRule(new Rule('Block known bad host', '^hackerserver$', Action.BLOCK));
+fw.addRule(new Rule('Allow corp subnet', '^10\\.0\\.0\\.(?!1$)\\d{1,3}$', Action.ALLOW));
+fw.addRule(new Rule('Block bad TLDs', '^[^.]+\\.bad$', Action.BLOCK));
+fw.addRule(new Rule('Allow google', '^google\\.com$', Action.ALLOW));
+fw.addRule(new Rule('Allow example CDN', '^cdn\\.example\\.com$', Action.ALLOW));
+
+// Traffic simulation
+const traffic = [
+  '192.168.1.1',
+  '10.0.0.1',
+  '10.0.0.25',
+  'hackerserver',
+  'google.com',
+  'cdn.example.com',
+  'unknownhost.bad',
+  '172.16.0.5',
+];
+
+console.log('=== Firewall Simulation Start ===');
+traffic.forEach(src => fw.apply(src));
+console.log('=== Firewall Simulation End ===');
+
+console.log('\n=== Firewall Disabled (All allowed) ===');
+fw.setEnabled(false);
+traffic.forEach(src => fw.apply(src));
