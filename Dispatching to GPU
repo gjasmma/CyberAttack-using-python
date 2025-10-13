@@ -1,0 +1,74 @@
+// ---- Stub implementations (so the script runs without ReferenceErrors) ----
+function findVulnerability(input) {
+  // Randomly return a fake vulnerability or null
+  return Math.random() > 0.7 ? `Vulnerability found from ${input}` : null;
+}
+
+function run(vuln) {
+  console.log("Applying fix:", vuln);
+}
+
+function gpu(vuln) {
+  console.log("Dispatching to GPU:", vuln);
+}
+
+function onLogin(cli, secret) {
+  console.log(`Login: cli="${cli}", secret="${secret}"`);
+}
+
+function checkVulnerabilities() {
+  console.log("System-wide vulnerability check started.");
+}
+
+function respondToIntrusion() {
+  console.log("Intrusion detected. Responding.");
+}
+
+// ---- Required variables/objects ----
+let bool = false;          // set true to enter the loop
+let open = false;          // set true to enter the loop
+let cli = "demoClient";
+let db = true;
+
+const Computer = {
+  word: 8,
+  adminAccess: true
+};
+
+// ---- Safe main logic (no infinite while(true) freezes) ----
+for (let i = 0; i < 5; i++) {
+  const vulnerability = findVulnerability("yes");
+  if (vulnerability) {
+    run(vulnerability);
+  }
+}
+
+while (bool) {
+  // do something meaningful here
+  console.log("Bool loop iteration.");
+  break; // prevent infinite loop; remove if you manage the condition externally
+}
+
+while (open) {
+  // handle user logic here
+  console.log("Open loop iteration.");
+  break; // prevent infinite loop
+}
+
+onLogin(cli, "supersecret");
+checkVulnerabilities();
+
+for (let i = 0; i < 5; i++) {
+  const vulnerability = findVulnerability("rest");
+  if (vulnerability) {
+    gpu(vulnerability);
+  }
+}
+
+if (Computer.word >= 7 && Computer.adminAccess) {
+  const jump = Math.random() < 0.5;
+  console.log("Jump:", jump);
+  if (db) {
+    respondToIntrusion();
+  }
+}
