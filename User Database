@@ -1,0 +1,36 @@
+const readline = require("readline");
+
+// --- Fake user database ---
+const USERS = {
+  admin: "1234",
+  guest: "guestpass"
+};
+
+// --- Login function ---
+function login(username, password) {
+  return USERS[username] && USERS[username] === password;
+}
+
+// --- Setup readline interface ---
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// --- Loop until success ---
+function askCredentials() {
+  rl.question("Username: ", (username) => {
+    rl.question("Password: ", (password) => {
+      if (login(username, password)) {
+        console.log("✅ Login successful! Welcome,", username);
+        rl.close();
+      } else {
+        console.log("❌ Login failed. Try again.\n");
+        askCredentials(); // repeat until correct
+      }
+    });
+  });
+}
+
+askCredentials();
+
