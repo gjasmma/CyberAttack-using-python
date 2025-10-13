@@ -1,0 +1,78 @@
+const readline = require("readline");
+
+// --- Fake user database ---
+const USERS = {
+  admin: "1234",
+  guest: "guestpass"
+};
+
+// --- Utility functions ---
+function login(username, password) {
+  return USERS[username] && USERS[username] === password;
+}
+
+function checkVulnerabilities() {
+  console.log("🔍 Scanning system... No real vulnerabilities found (stub).");
+}
+
+function listIPs() {
+  const textList = ['192.168.1.1', '10.0.0.1'];
+  console.log("📡 Known IPs:", textList.join(", "));
+}
+
+function respondToIntrusion() {
+  console.log("⚠️ Intrusion detected! Responding with countermeasures...");
+}
+
+// --- Menu system ---
+function showMenu(rl) {
+  console.log("\n=== Main Menu ===");
+  console.log("1. Check vulnerabilities");
+  console.log("2. List IP addresses");
+  console.log("3. Simulate intrusion response");
+  console.log("4. Exit");
+
+  rl.question("Choose an option: ", (choice) => {
+    switch (choice) {
+      case "1":
+        checkVulnerabilities();
+        break;
+      case "2":
+        listIPs();
+        break;
+      case "3":
+        respondToIntrusion();
+        break;
+      case "4":
+        console.log("Goodbye!");
+        rl.close();
+        return;
+      default:
+        console.log("Invalid choice.");
+    }
+    showMenu(rl); // loop back to menu
+  });
+}
+
+// --- Setup readline ---
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// --- Login loop ---
+function askCredentials() {
+  rl.question("Username: ", (username) => {
+    rl.question("Password: ", (password) => {
+      if (login(username, password)) {
+        console.log(`✅ Login successful! Welcome, ${username}.`);
+        showMenu(rl);
+      } else {
+        console.log("❌ Login failed. Try again.\n");
+        askCredentials();
+      }
+    });
+  });
+}
+
+askCredentials();
