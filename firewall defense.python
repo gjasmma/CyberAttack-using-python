@@ -1,0 +1,71 @@
+import ipaddress
+import datetime
+
+class FirewallDefense:
+    def __init__(self):
+        # Define allowed and suspicious ports
+        self.allowed_ports = {80, 443, 22, 8080}
+        self.suspicious_ports = {666, 1337, 31337}
+
+        # Define whitelisted and blacklisted IPs
+        self.whitelist_ips = {"192.168.1.100", "10.0.0.5"}
+        self.blacklist_ips = {"123.45.67.89", "222.222.222.222"}
+
+        # Log file
+        self.log_file = "firewall_log.txt"
+
+    def log_event(self, message: str):
+        """Write events to a log file with timestamp."""
+        with open(self.log_file, "a") as f:
+            f.write(f"{datetime.datetime.now()} - {message}\n")
+
+    def check_ip(self, ip: str) -> bool:
+        """Validate and check IP against whitelist/blacklist."""
+        try:
+            ipaddress.ip_address(ip)  # validate format
+        except ValueError:
+            print("❌ Invalid IP address format.")
+            self.log_event(f"Invalid IP format attempted: {ip}")
+            return False
+
+        if ip in self.whitelist_ips:
+            print(f"✅ Whitelisted IP {ip} allowed.")
+            self.log_event(f"Whitelisted IP allowed: {ip}")
+            return True
+        elif ip in self.blacklist_ips:
+            print(f"🚨 Blacklisted IP {ip} blocked!")
+            self.log_event(f"Blacklisted IP blocked: {ip}")
+            return False
+        else:
+            print(f"ℹ️ IP {ip} not in lists, proceeding with port check...")
+            return True
+
+    def check_port(self, port: int) -> bool:
+        """Check if port is allowed, suspicious, or unknown."""
+        if port in self.allowed_ports:
+            print(f"✅ Port {port} is secure. Access granted.")
+            self.log_event(f"Allowed port accessed: {port}")
+            return True
+        elif port in self.suspicious_ports:
+            print(f"⚠️ Suspicious port {port} detected! Potential attack.")
+            self.log_event(f"Suspicious port detected: {port}")
+            return False
+        else:
+            print(f"❌ Port {port} not recognized. Access denied.")
+            self.log_event(f"Unknown port denied: {port}")
+            return False
+
+    def defend(self, ip: str, port: int):
+        """Run full defense check: IP + Port."""
+        if self.check_ip(ip):
+            self.check_port(port)
+
+
+if __name__ == "__main__":
+    fw = FirewallDefense()
+
+    # Example runs
+    fw.defend("192.168.1.100", 80)       # Whitelisted IP, allowed port
+    fw.defend("123.45.67.89", 22)        # Blacklisted IP
+    fw.defend("8.8.8.8", 1337)           # Normal IP, suspicious port
+    fw.defend("256.300.1.1", 443)        # Invalid IP format
