@@ -1,0 +1,18 @@
+class Firewall:
+    def __init__(self):
+        # Blacklisted domains
+        self.blacklist = {"malicious.com", "phishing.net"}
+
+    def allow_request(self, domain: str) -> bool:
+        if domain in self.blacklist:
+            print(f"❌ Blocked access to: {domain}")
+            return False
+        else:
+            print(f"✅ Allowed access to: {domain}")
+            return True
+
+
+if __name__ == "__main__":
+    fw = Firewall()
+    fw.allow_request("example.com")
+    fw.allow_request("malicious.com")
