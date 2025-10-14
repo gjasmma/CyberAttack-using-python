@@ -1,0 +1,81 @@
+class Firewall:
+    def __init__(self):
+        self.blacklist = {"malicious.com", "phishing.net"}
+
+    def allow_request(self, domain: str) -> bool:
+        if domain in self.blacklist:
+            print(f"❌ Blocked access to: {domain}")
+            return False
+        else:
+            print(f"✅ Allowed access to: {domain}")
+            return True
+
+
+class MalwareScanner:
+    def __init__(self):
+        self.signatures = ["virus", "trojan", "worm"]
+
+    def scan_file(self, file_content: str) -> bool:
+        for sig in self.signatures:
+            if sig in file_content.lower():
+                print(f"⚠️ Malware detected: {sig}")
+                return True
+        print("✅ File is clean.")
+        return False
+
+
+class IntrusionDetector:
+    def __init__(self):
+        self.failed_attempts = {}
+        self.MAX_ATTEMPTS = 3
+
+    def login_attempt(self, user: str, success: bool):
+        if not success:
+            self.failed_attempts[user] = self.failed_attempts.get(user, 0) + 1
+            if self.failed_attempts[user] >= self.MAX_ATTEMPTS:
+                print(f"🚨 Intrusion alert! User {user} locked out.")
+            else:
+                print(f"❌ Failed login for {user}")
+        else:
+            print(f"✅ Successful login for {user}")
+            self.failed_attempts[user] = 0
+
+
+def main():
+    firewall = Firewall()
+    scanner = MalwareScanner()
+    detector = IntrusionDetector()
+
+    while True:
+        print("\n=== Security Suite ===")
+        print("1. Test Firewall")
+        print("2. Scan File for Malware")
+        print("3. Simulate Login Attempts")
+        print("4. Exit")
+
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            domain = input("Enter domain to access: ")
+            firewall.allow_request(domain)
+
+        elif choice == "2":
+            content = input("Enter file content to scan: ")
+            scanner.scan_file(content)
+
+        elif choice == "3":
+            user = input("Enter username: ")
+            success_input = input("Was login successful? (y/n): ").lower()
+            success = success_input == "y"
+            detector.login_attempt(user, success)
+
+        elif choice == "4":
+            print("Exiting Security Suite. Stay safe! 🛡️")
+            break
+
+        else:
+            print("Invalid choice, try again.")
+
+
+if __name__ == "__main__":
+    main()
