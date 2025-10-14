@@ -1,0 +1,23 @@
+class IntrusionDetector:
+    def __init__(self):
+        self.failed_attempts = {}
+        self.MAX_ATTEMPTS = 3
+
+    def login_attempt(self, user: str, success: bool):
+        if not success:
+            self.failed_attempts[user] = self.failed_attempts.get(user, 0) + 1
+            if self.failed_attempts[user] >= self.MAX_ATTEMPTS:
+                print(f"🚨 Intrusion alert! User {user} locked out.")
+            else:
+                print(f"❌ Failed login for {user}")
+        else:
+            print(f"✅ Successful login for {user}")
+            self.failed_attempts[user] = 0  # reset on success
+
+
+if __name__ == "__main__":
+    detector = IntrusionDetector()
+    detector.login_attempt("alice", False)
+    detector.login_attempt("alice", False)
+    detector.login_attempt("alice", False)
+    detector.login_attempt("alice", True)
