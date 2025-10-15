@@ -1,0 +1,78 @@
+import hashlib
+import getpass
+
+# --- Fake user database ---
+USERS = {
+    "admin": "1234",
+    "guest": "guestpass"
+}
+
+# --- Utility functions ---
+def login(username, password):
+    return USERS.get(username) == password
+
+def password_strength(password):
+    score = 0
+    if len(password) >= 8: score += 1
+    if any(c.isdigit() for c in password): score += 1
+    if any(c.isupper() for c in password): score += 1
+    if any(c in "!@#$%^&*()-_=+" for c in password): score += 1
+    
+    levels = ["Weak", "Fair", "Good", "Strong"]
+    print(f"🔑 Password strength: {levels[score-1] if score > 0 else 'Very Weak'}")
+
+def malware_scan():
+    print("🦠 Scanning system files...")
+    print("✅ No malware detected (simulation).")
+
+def file_integrity_check():
+    print("📂 Checking file integrity...")
+    sample_file = "important.txt"
+    fake_hash = hashlib.sha256(sample_file.encode()).hexdigest()
+    print(f"Hash for {sample_file}: {fake_hash}")
+    print("✅ No tampering detected (simulation).")
+
+def intrusion_detection():
+    print("⚠️ Intrusion attempt detected!")
+    print("🚨 Locking account and alerting administrator...")
+
+# --- Menu system ---
+def show_menu():
+    while True:
+        print("\n=== Security Toolkit Menu ===")
+        print("1. Check password strength")
+        print("2. Run malware scan")
+        print("3. Verify file integrity")
+        print("4. Simulate intrusion detection")
+        print("5. Exit")
+
+        choice = input("Choose an option: ")
+        if choice == "1":
+            pwd = getpass.getpass("Enter a password to test: ")
+            password_strength(pwd)
+        elif choice == "2":
+            malware_scan()
+        elif choice == "3":
+            file_integrity_check()
+        elif choice == "4":
+            intrusion_detection()
+        elif choice == "5":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice.")
+
+# --- Login loop ---
+def main():
+    while True:
+        username = input("Username: ")
+        password = getpass.getpass("Password: ")
+        if login(username, password):
+            print(f"✅ Login successful! Welcome, {username}.")
+            show_menu()
+            break
+        else:
+            print("❌ Login failed. Try again.\n")
+
+if __name__ == "__main__":
+    main()
