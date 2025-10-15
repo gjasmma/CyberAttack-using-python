@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Security Toolkit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">🛡️</div>
+          <div class="brand-text">
+            <h1>Security Toolkit</h1>
+            <p>Modular suite</p>
+          </div>
+        </div>
+        <nav id="plugin-list" class="nav"></nav>
+        <footer class="sidebar-footer">v1.0</footer>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div class="session" id="session-info">Guest</div>
+          <div class="actions">
+            <button id="login-btn" class="btn primary">Login</button>
+          </div>
+        </header>
+
+        <section class="panel">
+          <h2 id="panel-title">Welcome</h2>
+          <div id="panel-desc" class="panel-desc">
+            Choose a module from the left to run a security task.
+          </div>
+
+          <form id="plugin-form" class="form hidden"></form>
+          <div id="results" class="results">
+            <div class="placeholder">Results will appear here.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Login</h3>
+        <div class="form-row">
+          <label>Username</label>
+          <input id="username" type="text" placeholder="admin or guest" />
+        </div>
+        <div class="form-row">
+          <label>Password</label>
+          <input id="password" type="password" placeholder="••••••" />
+        </div>
+        <div class="modal-actions">
+          <button id="modal-cancel" class="btn">Cancel</button>
+          <button id="modal-submit" class="btn primary">Login</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
