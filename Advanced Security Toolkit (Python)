@@ -1,1 +1,99 @@
+import hashlib
+import getpass
+import os
+import socket
+import psutil  # install with: pip install psutil
 
+# --- Fake user database ---
+USERS = {
+    "admin": "1234",
+    "guest": "guestpass"
+}
+
+# --- Utility functions ---
+def login(username, password):
+    return USERS.get(username) == password
+
+def password_strength(password):
+    score = 0
+    if len(password) >= 8: score += 1
+    if any(c.isdigit() for c in password): score += 1
+    if any(c.isupper() for c in password): score += 1
+    if any(c in "!@#$%^&*()-_=+" for c in password): score += 1
+    
+    levels = ["Very Weak", "Weak", "Fair", "Good", "Strong"]
+    print(f"🔑 Password strength: {levels[min(score,4)]}")
+
+def malware_scan():
+    print("🦠 Scanning running processes...")
+    suspicious = []
+    for proc in psutil.process_iter(['pid', 'name']):
+        name = proc.info['name'].lower()
+        if "hack" in name or "virus" in name or "malware" in name:
+            suspicious.append(proc.info)
+    if suspicious:
+        print("⚠️ Suspicious processes found:")
+        for s in suspicious:
+            print(f" - PID {s['pid']}: {s['name']}")
+    else:
+        print("✅ No suspicious processes detected.")
+
+def file_integrity_check():
+    print("📂 Checking file integrity...")
+    sample_file = "important.txt"
+    if os.path.exists(sample_file):
+        with open(sample_file, "rb") as f:
+            data = f.read()
+            file_hash = hashlib.sha256(data).hexdigest()
+        print(f"Hash for {sample_file}: {file_hash}")
+    else:
+        print(f"⚠️ {sample_file} not found. (Place a file to test integrity.)")
+
+def intrusion_detection():
+    print("📡 Checking open ports...")
+    hostname = socket.gethostname()
+    ip = socket.gethostbyname(hostname)
+    print(f"Local IP: {ip}")
+    print("⚠️ Simulated intrusion attempt detected on port 22 (SSH)!")
+    print("🚨 Blocking IP and alerting administrator...")
+
+# --- Menu system ---
+def show_menu():
+    while True:
+        print("\n=== Security Toolkit Menu ===")
+        print("1. Check password strength")
+        print("2. Run malware scan")
+        print("3. Verify file integrity")
+        print("4. Simulate intrusion detection")
+        print("5. Exit")
+
+        choice = input("Choose an option: ")
+        if choice == "1":
+            pwd = getpass.getpass("Enter a password to test: ")
+            password_strength(pwd)
+        elif choice == "2":
+            malware_scan()
+        elif choice == "3":
+            file_integrity_check()
+        elif choice == "4":
+            intrusion_detection()
+        elif choice == "5":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice.")
+
+# --- Login loop ---
+def main():
+    while True:
+        username = input("Username: ")
+        password = getpass.getpass("Password: ")
+        if login(username, password):
+            print(f"✅ Login successful! Welcome, {username}.")
+            show_menu()
+            break
+        else:
+            print("❌ Login failed. Try again.\n")
+
+if __name__ == "__main__":
+    main()
