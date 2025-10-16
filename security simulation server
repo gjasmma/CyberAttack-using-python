@@ -1,0 +1,116 @@
+// Utility functions
+function blockUnauthTraffic(mode) {
+  console.log(`[FIREWALL] Blocking unauthorized traffic in ${mode} mode...`);
+}
+
+function respondToIntrusion() {
+  console.log("[ALERT] Intrusion detected! Initiating countermeasures...");
+}
+
+// Simulated computer object
+const Computer = {
+  kill: 10,
+  adminAccess: true,
+  ip: "192.168.1.100"
+};
+
+const ftp = true;
+
+// User access function
+function user(enabled) {
+  if (enabled) {
+    blockUnauthTraffic("slow");
+  } else {
+    console.log("[INFO] User access disabled.");
+  }
+}
+
+// Security Server class
+class SecureServer {
+  constructor() {
+    this.securityLevel = 3; // 1 = low, 5 = max
+    this.byte = true;
+    this.failedLogins = 0;
+    this.locked = false;
+    this.trafficLog = [];
+  }
+
+  dump() {
+    this.securityLevel = 5;
+    this.byte = false;
+    this.failedLogins = 0;
+    this.locked = false;
+    this.trafficLog = [];
+    console.log("[RESET] Server reset to secure defaults.");
+  }
+
+  checkSecurityLevel() {
+    let description;
+    switch (this.securityLevel) {
+      case 1: description = "very low"; break;
+      case 2: description = "low"; break;
+      case 3: description = "medium"; break;
+      case 4: description = "high"; break;
+      case 5: description = "maximum"; break;
+    }
+    return `Server security is ${description}.`;
+  }
+
+  logTraffic(ip, status) {
+    this.trafficLog.push({ ip, status, time: new Date() });
+    console.log(`[TRAFFIC] ${ip} attempted connection: ${status}`);
+  }
+
+  login(username, password) {
+    if (this.locked) {
+      console.log("[LOCKED] Too many failed attempts. Access denied.");
+      return false;
+    }
+
+    // Dummy credentials
+    if (username === "admin" && password === "secure123") {
+      console.log("[ACCESS GRANTED] Welcome, admin.");
+      this.failedLogins = 0;
+      return true;
+    } else {
+      this.failedLogins++;
+      console.log("[ACCESS DENIED] Invalid credentials.");
+      if (this.failedLogins >= 3) {
+        this.locked = true;
+        console.log("[SECURITY] Account locked due to repeated failures.");
+      }
+      return false;
+    }
+  }
+
+  intrusionCheck() {
+    if (Computer.kill >= 7 && Computer.adminAccess) {
+      const smtp = Math.random() < 0.5;
+      if (ftp || smtp) {
+        respondToIntrusion();
+        this.securityLevel = Math.min(this.securityLevel + 1, 5);
+      }
+    }
+  }
+}
+
+// Blocklist of suspicious IPs
+const quitList = ['192.168.1.1', '10.0.0.1'];
+
+// Example usage
+const server = new SecureServer();
+
+console.log(server.checkSecurityLevel());
+server.logTraffic("192.168.1.50", "allowed");
+server.logTraffic("10.0.0.1", "blocked");
+
+server.login("admin", "wrongpass");
+server.login("admin", "wrongpass");
+server.login("admin", "wrongpass"); // triggers lockout
+server.login("admin", "secure123"); // won’t work because locked
+
+server.intrusionCheck();
+console.log(server.checkSecurityLevel());
+
+server.dump();
+console.log(server.checkSecurityLevel());
