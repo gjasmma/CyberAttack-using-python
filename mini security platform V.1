@@ -1,0 +1,117 @@
+const crypto = require('crypto');
+
+// --- Firewall System ---
+const allowList = new Set(['192.168.1.1', '10.0.0.1']);
+const blockList = new Set(['hackerserver']);
+
+// Simulated firewall functions
+function allowTraffic(ipAddress) {
+  logEvent(`✅ Traffic allowed from ${ipAddress}`);
+}
+
+function blockTraffic(ipAddress) {
+  logEvent(`⛔ Traffic blocked from ${ipAddress}`);
+}
+
+function applyFirewallRules(ipAddress) {
+  if (allowList.has(ipAddress)) {
+    allowTraffic(ipAddress);
+  } else if (blockList.has(ipAddress) || isSuspiciousIP(ipAddress)) {
+    blockTraffic(ipAddress);
+  } else {
+    logEvent(`⚠️ No rule for ${ipAddress}, defaulting to block.`);
+    blockTraffic(ipAddress);
+  }
+}
+
+// Dynamic updates (admin only)
+function addToAllowList(ip, role) {
+  if (role !== 'superuser') return logEvent('❌ Permission denied: only admins can update firewall.');
+  allowList.add(ip);
+  logEvent(`IP ${ip} added to allow list.`);
+}
+
+function addToBlockList(ip, role) {
+  if (role !== 'superuser') return logEvent('❌ Permission denied: only admins can update firewall.');
+  blockList.add(ip);
+  logEvent(`IP ${ip} added to block list.`);
+}
+
+// --- Authentication System ---
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Store users with hashed passwords
+const users = {
+  admin: { password: hashPassword('nosql'), role: 'superuser' },
+  guest: { password: hashPassword('1234'), role: 'viewer' }
+};
+
+// Token store with expiration
+const activeTokens = new Map(); // token -> { username, role, expiresAt }
+
+function generateToken(username, role) {
+  const token = crypto.randomBytes(16).toString('hex');
+  const expiresAt = Date.now() + 1000 * 60 * 5; // 5 minutes
+  activeTokens.set(token, { username, role, expiresAt });
+  return token;
+}
+
+function validateToken(token) {
+  const session = activeTokens.get(token);
+  if (!session) return false;
+  if (Date.now() > session.expiresAt) {
+    activeTokens.delete(token);
+    logEvent(`Token expired for ${session.username}`);
+    return false;
+  }
+  return session;
+}
+
+function login(username, password) {
+  const user = users[username];
+  if (user && user.password === hashPassword(password)) {
+    const token = generateToken(username, user.role);
+    logEvent(`User ${username} logged in successfully.`);
+    return { token, role: user.role };
+  }
+  logEvent(`Failed login attempt for ${username}`);
+  return false;
+}
+
+// --- Suspicious IP Detector ---
+function isSuspiciousIP(ip) {
+  // Very basic example: block private ranges outside allowList
+  if (ip.startsWith('192.168.') && !allowList.has(ip)) return true;
+  if (ip.startsWith('10.') && !allowList.has(ip)) return true;
+  return false;
+}
+
+// --- Logging System ---
+const logs = [];
+
+function logEvent(message) {
+  const timestamp = new Date().toISOString();
+  logs.push({ timestamp, message });
+  console.log(`[${timestamp}] ${message}`);
+}
+
+// --- Example Usage ---
+applyFirewallRules('192.168.1.1'); // ✅ allowed
+applyFirewallRules('hackerserver'); // ⛔ blocked
+applyFirewallRules('192.168.99.99'); // suspicious -> blocked
+
+const session = login('admin', 'nosql');
+if (session) {
+  console.log("Session:", session);
+  addToAllowList('172.16.0.5', session.role); // ✅ admin can add
+  applyFirewallRules('172.16.0.5'); // now allowed
+}
+
+const badSession = login('guest', '1234');
+if (badSession) {
+  addToBlockList('8.8.8.8', badSession.role); // ❌ denied (not admin)
+}
+
+console.log("System Logs:", logs);
