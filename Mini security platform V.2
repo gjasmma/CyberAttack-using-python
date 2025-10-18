@@ -1,0 +1,283 @@
+const crypto = require('crypto');
+
+// --- Config ---
+const CONFIG = {
+  tokenTtlMs: 1000 * 60 * 5,           // 5 minutes
+  rateLimitWindowMs: 1000 * 60,        // 1 minute window
+  rateLimitMaxPerIp: 30,               // max requests per IP per window
+  rateLimitMaxPerUser: 10,             // max login attempts per username per window
+  bruteForceThreshold: 5,              // failed attempts before lockout
+  bruteForceLockoutMs: 1000 * 60 * 15, // 15 minutes lockout
+  bruteForceBackoffBaseMs: 1000 * 5,   // base backoff 5s, increases with attempts
+  loadingDelayMs: 300,                 // artificial step delay for "loading"
+};
+
+// --- Firewall System ---
+const allowList = new Set(['192.168.1.1', '10.0.0.1']);
+const blockList = new Set(['hackerserver']); // treat as IP/host label for demo
+
+function isSuspiciousIP(ip) {
+  if (ip.startsWith('192.168.') && !allowList.has(ip)) return true;
+  if (ip.startsWith('10.') && !allowList.has(ip)) return true;
+  return false;
+}
+
+function allowTraffic(ipAddress) {
+  logEvent(`✅ Traffic allowed from ${ipAddress}`);
+}
+
+function blockTraffic(ipAddress, reason = 'Policy') {
+  logEvent(`⛔ Traffic blocked from ${ipAddress} (Reason: ${reason})`);
+}
+
+function applyFirewallRules(ipAddress) {
+  if (allowList.has(ipAddress)) {
+    allowTraffic(ipAddress);
+  } else if (blockList.has(ipAddress) || isSuspiciousIP(ipAddress)) {
+    blockTraffic(ipAddress, blockList.has(ipAddress) ? 'Blocklist' : 'Suspicious');
+  } else {
+    blockTraffic(ipAddress, 'Default deny');
+  }
+}
+
+// Admin-only updates
+function addToAllowList(ip, role) {
+  if (role !== 'superuser') return logEvent('❌ Permission denied: only admins can update firewall.');
+  allowList.add(ip);
+  logEvent(`🔧 IP ${ip} added to allow list.`);
+}
+
+function addToBlockList(ip, role) {
+  if (role !== 'superuser') return logEvent('❌ Permission denied: only admins can update firewall.');
+  blockList.add(ip);
+  logEvent(`🔧 IP ${ip} added to block list.`);
+}
+
+// --- Auth System ---
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+const users = {
+  admin: { password: hashPassword('nosql'), role: 'superuser' },
+  guest: { password: hashPassword('1234'), role: 'viewer' }
+};
+
+const activeTokens = new Map(); // token -> { username, role, expiresAt }
+
+function generateToken(username, role) {
+  const token = crypto.randomBytes(16).toString('hex');
+  const expiresAt = Date.now() + CONFIG.tokenTtlMs;
+  activeTokens.set(token, { username, role, expiresAt });
+  return token;
+}
+
+function validateToken(token) {
+  const session = activeTokens.get(token);
+  if (!session) return false;
+  if (Date.now() > session.expiresAt) {
+    activeTokens.delete(token);
+    logEvent(`⌛ Token expired for ${session.username}`);
+    return false;
+  }
+  return session;
+}
+
+// --- Rate Limiting & Brute Force ---
+const ipCounters = new Map();       // ip -> { count, windowStart }
+const userCounters = new Map();     // username -> { count, windowStart }
+const bruteForce = new Map();       // username -> { failedCount, lockedUntil }
+
+function inWindow(counter, windowMs) {
+  const now = Date.now();
+  if (!counter.windowStart || now - counter.windowStart > windowMs) {
+    counter.windowStart = now;
+    counter.count = 0;
+  }
+  return counter;
+}
+
+function rateLimitIp(ip) {
+  const counter = inWindow(ipCounters.get(ip) || { count: 0, windowStart: 0 }, CONFIG.rateLimitWindowMs);
+  counter.count += 1;
+  ipCounters.set(ip, counter);
+  if (counter.count > CONFIG.rateLimitMaxPerIp) {
+    return { limited: true, reason: 'IP rate limit exceeded' };
+  }
+  return { limited: false };
+}
+
+function rateLimitUser(username) {
+  const counter = inWindow(userCounters.get(username) || { count: 0, windowStart: 0 }, CONFIG.rateLimitWindowMs);
+  counter.count += 1;
+  userCounters.set(username, counter);
+  if (counter.count > CONFIG.rateLimitMaxPerUser) {
+    return { limited: true, reason: 'User rate limit exceeded' };
+  }
+  return { limited: false };
+}
+
+function recordFailedAttempt(username, ip) {
+  const entry = bruteForce.get(username) || { failedCount: 0, lockedUntil: 0 };
+  entry.failedCount += 1;
+
+  // Exponential backoff hint (informational)
+  const backoffMs = CONFIG.bruteForceBackoffBaseMs * entry.failedCount;
+
+  if (entry.failedCount >= CONFIG.bruteForceThreshold) {
+    entry.lockedUntil = Date.now() + CONFIG.bruteForceLockoutMs;
+    // Optionally auto-block IP if repeated abuse detected (demo threshold)
+    const ipCounter = ipCounters.get(ip);
+    if (ipCounter && ipCounter.count > CONFIG.rateLimitMaxPerIp * 2) {
+      blockList.add(ip);
+      logEvent(`🚫 IP ${ip} auto-blocked due to repeated abuse.`);
+    }
+    logEvent(`🔒 User "${username}" locked out for ${CONFIG.bruteForceLockoutMs / 1000}s.`);
+  } else {
+    logEvent(`⏳ Backoff suggested: wait ~${Math.round(backoffMs / 1000)}s before next attempt (user "${username}").`);
+  }
+
+  bruteForce.set(username, entry);
+}
+
+function clearFailedAttempts(username) {
+  bruteForce.set(username, { failedCount: 0, lockedUntil: 0 });
+}
+
+function isLocked(username) {
+  const entry = bruteForce.get(username);
+  if (!entry) return false;
+  if (Date.now() < entry.lockedUntil) return true;
+  return false;
+}
+
+// --- Logging & Loading ---
+const logs = [];
+
+function logEvent(message) {
+  const timestamp = new Date().toISOString();
+  logs.push({ timestamp, message });
+  console.log(`[${timestamp}] ${message}`);
+}
+
+function wait(ms = CONFIG.loadingDelayMs, label = 'Loading') {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      logEvent(`... ${label} step done`);
+      resolve();
+    }, ms);
+  });
+}
+
+// --- High-level flows with step-by-step loading ---
+async function secureLoginFlow({ username, password, ip }) {
+  logEvent(`🔐 Login initiated for "${username}" from ${ip}`);
+  await wait(CONFIG.loadingDelayMs, 'Start login');
+
+  // Firewall check
+  applyFirewallRules(ip);
+  await wait(CONFIG.loadingDelayMs, 'Firewall evaluation');
+
+  // Rate limit checks
+  const ipLimit = rateLimitIp(ip);
+  if (ipLimit.limited) {
+    logEvent(`❌ Login blocked: ${ipLimit.reason}`);
+    return false;
+  }
+  await wait(CONFIG.loadingDelayMs, 'IP rate limit check');
+
+  const userLimit = rateLimitUser(username);
+  if (userLimit.limited) {
+    logEvent(`❌ Login blocked: ${userLimit.reason}`);
+    return false;
+  }
+  await wait(CONFIG.loadingDelayMs, 'User rate limit check');
+
+  // Brute force lockout check
+  if (isLocked(username)) {
+    logEvent(`❌ Login blocked: user "${username}" is temporarily locked out`);
+    return false;
+  }
+  await wait(CONFIG.loadingDelayMs, 'Brute force check');
+
+  // Credential validation
+  const user = users[username];
+  if (user && user.password === hashPassword(password)) {
+    const token = generateToken(username, user.role);
+    clearFailedAttempts(username);
+    logEvent(`✅ Login success for "${username}"`);
+    await wait(CONFIG.loadingDelayMs, 'Issue token');
+    return { token, role: user.role };
+  } else {
+    recordFailedAttempt(username, ip);
+    logEvent(`⚠️ Invalid credentials for "${username}"`);
+    await wait(CONFIG.loadingDelayMs, 'Record failure');
+    return false;
+  }
+}
+
+async function secureFirewallUpdateFlow({ token, action, ip }) {
+  logEvent(`🛡️ Firewall update flow initiated from ${ip}`);
+  await wait(CONFIG.loadingDelayMs, 'Start firewall update');
+
+  // Firewall check for request origin
+  applyFirewallRules(ip);
+  await wait(CONFIG.loadingDelayMs, 'Firewall evaluation');
+
+  // Auth token validate
+  const session = validateToken(token);
+  if (!session) {
+    logEvent('❌ Firewall update blocked: invalid or expired token');
+    return false;
+  }
+  await wait(CONFIG.loadingDelayMs, 'Token validation');
+
+  // Role check
+  if (session.role !== 'superuser') {
+    logEvent('❌ Firewall update blocked: insufficient permissions');
+    return false;
+  }
+  await wait(CONFIG.loadingDelayMs, 'Permission check');
+
+  // Perform action
+  if (action.type === 'allow') {
+    addToAllowList(action.value, session.role);
+  } else if (action.type === 'block') {
+    addToBlockList(action.value, session.role);
+  } else {
+    logEvent('❌ Unknown firewall action');
+    return false;
+  }
+  await wait(CONFIG.loadingDelayMs, 'Apply rule');
+
+  logEvent('✅ Firewall update completed');
+  return true;
+}
+
+// --- Example usage (demo) ---
+(async () => {
+  applyFirewallRules('192.168.1.1'); // allowed
+  applyFirewallRules('hackerserver'); // blocked
+  applyFirewallRules('192.168.99.99'); // suspicious -> blocked
+
+  // Admin login flow with step-by-step logs
+  const adminSession = await secureLoginFlow({ username: 'admin', password: 'nosql', ip: '10.0.0.2' });
+  console.log('Admin Session:', adminSession);
+
+  // Attempt guest login with wrong password to trigger brute force behavior
+  for (let i = 1; i <= 6; i++) {
+    await secureLoginFlow({ username: 'guest', password: 'wrong', ip: '10.0.0.3' });
+  }
+
+  // Use admin token to update firewall (step-by-step)
+  if (adminSession) {
+    await secureFirewallUpdateFlow({
+      token: adminSession.token,
+      action: { type: 'allow', value: '172.16.0.5' },
+      ip: '10.0.0.2'
+    });
+    applyFirewallRules('172.16.0.5'); // now allowed
+  }
+
+  console.log('System Logs:', logs);
+})();
