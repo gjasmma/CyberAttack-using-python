@@ -1,0 +1,9 @@
+{
+  "cycleLimit": 5,
+  "cyclePauseMs": 1000,
+  "bruteForce": { "failThreshold": 4, "blockDurationMs": 20000 },
+  "token": { "ttlMs": 30000 },
+  "knownBadIPs": ["hackerserver", "203.0.113.13", "198.51.100.7"],
+  "allowlist": ["192.168.1.1", "10.0.0.2"],
+  "auditFile": "./audit.log"
+}

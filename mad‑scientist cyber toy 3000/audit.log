@@ -1,0 +1,146 @@
+[2025-10-18T14:44:02.834Z] INFO Firewall: IP 192.168.1.1 allowed
+[2025-10-18T14:44:02.834Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:02.835Z] WARN Firewall: IP 192.168.99.99 suspicious -> denied
+[2025-10-18T14:44:02.835Z] INFO Firewall: IP 10.0.0.2 allowed
+[2025-10-18T14:44:02.835Z] INFO Auth: Successful login {"ip":"10.0.0.2","username":"admin"}
+[2025-10-18T14:44:02.836Z] INFO Auth: Session created for admin {"token":"token-dce4m11v1wd","expiresAt":1760798672836}
+[2025-10-18T14:44:02.837Z] INFO AdminSession: State {"session":true}
+[2025-10-18T14:44:02.837Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:02.837Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:02.838Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:02.838Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:02.838Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:02.838Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:02.839Z] INFO FirewallUpdate: Allowed 172.16.0.5 {"by":"10.0.0.2"}
+[2025-10-18T14:44:02.839Z] INFO Firewall: IP 172.16.0.5 allowed
+[2025-10-18T14:44:02.839Z] WARN Firewall: IP 172.16.0.100 suspicious -> denied
+[2025-10-18T14:44:02.839Z] WARN Firewall: IP 172.16.0.100 suspicious -> denied
+[2025-10-18T14:44:02.840Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.100","username":"admin"}
+[2025-10-18T14:44:02.840Z] WARN Firewall: IP 172.16.0.215 suspicious -> denied
+[2025-10-18T14:44:02.840Z] WARN Firewall: IP 172.16.0.215 suspicious -> denied
+[2025-10-18T14:44:02.840Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.215","username":"guest"}
+[2025-10-18T14:44:02.840Z] WARN Firewall: IP 192.168.0.76 suspicious -> denied
+[2025-10-18T14:44:02.840Z] WARN Firewall: IP 192.168.0.76 suspicious -> denied
+[2025-10-18T14:44:02.840Z] WARN Auth: Login blocked by firewall {"ip":"192.168.0.76","username":"guest"}
+[2025-10-18T14:44:02.840Z] WARN Firewall: IP 10.0.0.68 suspicious -> denied
+[2025-10-18T14:44:02.840Z] WARN Firewall: IP 10.0.0.68 suspicious -> denied
+[2025-10-18T14:44:02.841Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.68","username":"admin"}
+[2025-10-18T14:44:02.841Z] INFO Health: Current metrics {"cpu":31,"mem":49}
+[2025-10-18T14:44:03.844Z] INFO Wait: Paused 1000ms (Cycle pause)
+[2025-10-18T14:44:03.845Z] INFO Firewall: IP 192.168.1.1 allowed
+[2025-10-18T14:44:03.845Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:03.845Z] WARN Firewall: IP 192.168.99.99 suspicious -> denied
+[2025-10-18T14:44:03.845Z] INFO Firewall: IP 10.0.0.2 allowed
+[2025-10-18T14:44:03.845Z] INFO Auth: Successful login {"ip":"10.0.0.2","username":"admin"}
+[2025-10-18T14:44:03.845Z] INFO Auth: Session created for admin {"token":"token-ji6jy2d28o","expiresAt":1760798673845}
+[2025-10-18T14:44:03.846Z] INFO AdminSession: State {"session":true}
+[2025-10-18T14:44:03.846Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:03.846Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:03.846Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:03.846Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:03.846Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:03.846Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:03.846Z] INFO FirewallUpdate: Allowed 172.16.0.5 {"by":"10.0.0.2"}
+[2025-10-18T14:44:03.846Z] INFO Firewall: IP 172.16.0.5 allowed
+[2025-10-18T14:44:03.846Z] WARN Firewall: IP 192.168.0.241 suspicious -> denied
+[2025-10-18T14:44:03.846Z] WARN Firewall: IP 192.168.0.241 suspicious -> denied
+[2025-10-18T14:44:03.846Z] WARN Auth: Login blocked by firewall {"ip":"192.168.0.241","username":"moderator"}
+[2025-10-18T14:44:03.846Z] WARN Firewall: IP 172.16.0.126 suspicious -> denied
+[2025-10-18T14:44:03.846Z] WARN Firewall: IP 172.16.0.126 suspicious -> denied
+[2025-10-18T14:44:03.847Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.126","username":"guest"}
+[2025-10-18T14:44:03.847Z] WARN Firewall: IP 172.16.0.253 suspicious -> denied
+[2025-10-18T14:44:03.847Z] WARN Firewall: IP 172.16.0.253 suspicious -> denied
+[2025-10-18T14:44:03.847Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.253","username":"guest"}
+[2025-10-18T14:44:03.847Z] WARN Firewall: IP 192.168.0.185 suspicious -> denied
+[2025-10-18T14:44:03.847Z] WARN Firewall: IP 192.168.0.185 suspicious -> denied
+[2025-10-18T14:44:03.847Z] WARN Auth: Login blocked by firewall {"ip":"192.168.0.185","username":"admin"}
+[2025-10-18T14:44:03.847Z] INFO Health: Current metrics {"cpu":44,"mem":49}
+[2025-10-18T14:44:04.848Z] INFO Wait: Paused 1000ms (Cycle pause)
+[2025-10-18T14:44:04.848Z] INFO Firewall: IP 192.168.1.1 allowed
+[2025-10-18T14:44:04.849Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:04.849Z] WARN Firewall: IP 192.168.99.99 suspicious -> denied
+[2025-10-18T14:44:04.849Z] INFO Firewall: IP 10.0.0.2 allowed
+[2025-10-18T14:44:04.849Z] INFO Auth: Successful login {"ip":"10.0.0.2","username":"admin"}
+[2025-10-18T14:44:04.849Z] INFO Auth: Session created for admin {"token":"token-4c9eaq86i92","expiresAt":1760798674849}
+[2025-10-18T14:44:04.849Z] INFO AdminSession: State {"session":true}
+[2025-10-18T14:44:04.849Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:04.849Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:04.849Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:04.849Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:04.849Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:04.849Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:04.849Z] INFO FirewallUpdate: Allowed 172.16.0.5 {"by":"10.0.0.2"}
+[2025-10-18T14:44:04.849Z] INFO Firewall: IP 172.16.0.5 allowed
+[2025-10-18T14:44:04.849Z] WARN Firewall: IP 203.0.113.13 denied (known-bad)
+[2025-10-18T14:44:04.850Z] WARN Firewall: IP 203.0.113.13 denied (known-bad)
+[2025-10-18T14:44:04.850Z] WARN Auth: Login blocked by firewall {"ip":"203.0.113.13","username":"moderator"}
+[2025-10-18T14:44:04.850Z] WARN Firewall: IP 172.16.0.129 suspicious -> denied
+[2025-10-18T14:44:04.850Z] WARN Firewall: IP 172.16.0.129 suspicious -> denied
+[2025-10-18T14:44:04.850Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.129","username":"admin"}
+[2025-10-18T14:44:04.850Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:04.850Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:04.850Z] WARN Auth: Login blocked by firewall {"ip":"hackerserver","username":"admin"}
+[2025-10-18T14:44:04.850Z] WARN Firewall: IP 172.16.0.188 suspicious -> denied
+[2025-10-18T14:44:04.850Z] WARN Firewall: IP 172.16.0.188 suspicious -> denied
+[2025-10-18T14:44:04.850Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.188","username":"guest"}
+[2025-10-18T14:44:04.851Z] INFO Health: Current metrics {"cpu":73,"mem":47}
+[2025-10-18T14:44:05.853Z] INFO Wait: Paused 1000ms (Cycle pause)
+[2025-10-18T14:44:05.853Z] INFO Firewall: IP 192.168.1.1 allowed
+[2025-10-18T14:44:05.853Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:05.853Z] WARN Firewall: IP 192.168.99.99 suspicious -> denied
+[2025-10-18T14:44:05.854Z] INFO Firewall: IP 10.0.0.2 allowed
+[2025-10-18T14:44:05.854Z] INFO Auth: Successful login {"ip":"10.0.0.2","username":"admin"}
+[2025-10-18T14:44:05.854Z] INFO Auth: Session created for admin {"token":"token-0clq09m3oolp","expiresAt":1760798675854}
+[2025-10-18T14:44:05.854Z] INFO AdminSession: State {"session":true}
+[2025-10-18T14:44:05.854Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:05.854Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:05.854Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:05.854Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:05.854Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:05.854Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:05.854Z] INFO FirewallUpdate: Allowed 172.16.0.5 {"by":"10.0.0.2"}
+[2025-10-18T14:44:05.855Z] INFO Firewall: IP 172.16.0.5 allowed
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP 172.16.0.176 suspicious -> denied
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP 172.16.0.176 suspicious -> denied
+[2025-10-18T14:44:05.855Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.176","username":"guest"}
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:05.855Z] WARN Auth: Login blocked by firewall {"ip":"hackerserver","username":"guest"}
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP 192.168.0.177 suspicious -> denied
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP 192.168.0.177 suspicious -> denied
+[2025-10-18T14:44:05.855Z] WARN Auth: Login blocked by firewall {"ip":"192.168.0.177","username":"admin"}
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP 10.0.0.114 suspicious -> denied
+[2025-10-18T14:44:05.855Z] WARN Firewall: IP 10.0.0.114 suspicious -> denied
+[2025-10-18T14:44:05.855Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.114","username":"moderator"}
+[2025-10-18T14:44:05.856Z] INFO Health: Current metrics {"cpu":65,"mem":73}
+[2025-10-18T14:44:06.857Z] INFO Wait: Paused 1000ms (Cycle pause)
+[2025-10-18T14:44:06.858Z] INFO Firewall: IP 192.168.1.1 allowed
+[2025-10-18T14:44:06.858Z] WARN Firewall: IP hackerserver denied (known-bad)
+[2025-10-18T14:44:06.858Z] WARN Firewall: IP 192.168.99.99 suspicious -> denied
+[2025-10-18T14:44:06.858Z] INFO Firewall: IP 10.0.0.2 allowed
+[2025-10-18T14:44:06.858Z] INFO Auth: Successful login {"ip":"10.0.0.2","username":"admin"}
+[2025-10-18T14:44:06.858Z] INFO Auth: Session created for admin {"token":"token-urhcdsj1pm","expiresAt":1760798676858}
+[2025-10-18T14:44:06.858Z] INFO AdminSession: State {"session":true}
+[2025-10-18T14:44:06.858Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:06.859Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:06.859Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:06.859Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:06.859Z] WARN Firewall: IP 10.0.0.3 suspicious -> denied
+[2025-10-18T14:44:06.859Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.3","username":"guest"}
+[2025-10-18T14:44:06.859Z] INFO FirewallUpdate: Allowed 172.16.0.5 {"by":"10.0.0.2"}
+[2025-10-18T14:44:06.859Z] INFO Firewall: IP 172.16.0.5 allowed
+[2025-10-18T14:44:06.859Z] WARN Firewall: IP 172.16.0.116 suspicious -> denied
+[2025-10-18T14:44:06.859Z] WARN Firewall: IP 172.16.0.116 suspicious -> denied
+[2025-10-18T14:44:06.859Z] WARN Auth: Login blocked by firewall {"ip":"172.16.0.116","username":"guest"}
+[2025-10-18T14:44:06.859Z] WARN Firewall: IP 192.168.0.98 suspicious -> denied
+[2025-10-18T14:44:06.859Z] WARN Firewall: IP 192.168.0.98 suspicious -> denied
+[2025-10-18T14:44:06.859Z] WARN Auth: Login blocked by firewall {"ip":"192.168.0.98","username":"moderator"}
+[2025-10-18T14:44:06.860Z] WARN Firewall: IP 10.0.0.100 suspicious -> denied
+[2025-10-18T14:44:06.860Z] WARN Firewall: IP 10.0.0.100 suspicious -> denied
+[2025-10-18T14:44:06.860Z] WARN Auth: Login blocked by firewall {"ip":"10.0.0.100","username":"guest"}
+[2025-10-18T14:44:06.860Z] WARN Firewall: IP 192.168.0.132 suspicious -> denied
+[2025-10-18T14:44:06.860Z] WARN Firewall: IP 192.168.0.132 suspicious -> denied
+[2025-10-18T14:44:06.860Z] WARN Auth: Login blocked by firewall {"ip":"192.168.0.132","username":"guest"}
+[2025-10-18T14:44:06.860Z] INFO Health: Current metrics {"cpu":32,"mem":75}
+[2025-10-18T14:44:07.862Z] INFO Wait: Paused 1000ms (Cycle pause)
+[2025-10-18T14:44:07.863Z] INFO Main: Cycle limit reached, exiting

@@ -1,0 +1,348 @@
+// SentinelSim 3000 — all-in-one security simulation (safe, educational demo)
+// Features:
+// - Brute force detection with IP-based thresholds
+// - Token-based sessions with expiry
+// - IP reputation (known-bad auto-block)
+// - Randomized events (auth attempts, firewall checks)
+// - Roles and permissions (admin, moderator, guest, attacker)
+// - System health metrics (simulated CPU/memory)
+// - Cycle limit and config loading
+// - Interactive commands (allow/deny IP, list logs/sessions)
+// - Audit trail: logs saved to a file
+
+const fs = require('fs');
+const readline = require('readline');
+
+// -------------------- Configuration --------------------
+
+const DEFAULT_CONFIG = {
+  cycleLimit: 0, // 0 = infinite
+  cyclePauseMs: 1500,
+  bruteForce: { failThreshold: 3, blockDurationMs: 15_000 },
+  token: { ttlMs: 20_000 }, // session token lifetime
+  knownBadIPs: ['hackerserver', '203.0.113.13'],
+  users: [
+    { username: 'admin', password: 'nosql', role: 'admin' },
+    { username: 'moderator', password: 'pass', role: 'moderator' },
+    { username: 'guest', password: 'guest', role: 'guest' }
+  ],
+  allowlist: ['192.168.1.1'],
+  auditFile: './audit.log'
+};
+
+let CONFIG = { ...DEFAULT_CONFIG };
+
+// Try to load optional config.json if present
+try {
+  if (fs.existsSync('./config.json')) {
+    const userCfg = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+    CONFIG = { ...DEFAULT_CONFIG, ...userCfg };
+    logInfo('Config', 'Loaded config.json and merged with defaults');
+  }
+} catch (e) {
+  console.log('Config load error, using defaults:', e.message);
+}
+
+// -------------------- State --------------------
+
+const logs = []; // in-memory log buffer
+const sessions = new Map(); // token => { user, role, expiresAt }
+const failedAuthByIP = new Map(); // ip => count
+const blockedIPs = new Map(); // ip => unblockAt
+const firewallAllow = new Set(CONFIG.allowlist);
+const firewallDeny = new Set(CONFIG.knownBadIPs);
+
+// -------------------- Logging --------------------
+
+function appendAudit(message) {
+  try {
+    fs.appendFileSync(CONFIG.auditFile, message + '\n', 'utf8');
+  } catch {}
+}
+
+function log(level, topic, message, extra = {}) {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    level,
+    topic,
+    message,
+    ...extra
+  };
+  const line = `[${entry.timestamp}] ${level.toUpperCase()} ${topic}: ${message}` +
+    (Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : '');
+  console.log(line);
+  logs.push(entry);
+  appendAudit(line);
+}
+
+function logInfo(topic, message, extra) { log('info', topic, message, extra); }
+function logWarn(topic, message, extra) { log('warn', topic, message, extra); }
+function logError(topic, message, extra) { log('error', topic, message, extra); }
+
+// -------------------- Utilities --------------------
+
+function wait(ms, label) {
+  return new Promise(resolve => setTimeout(() => {
+    logInfo('Wait', `Paused ${ms}ms (${label})`);
+    resolve();
+  }, ms));
+}
+
+function isBlocked(ip) {
+  const until = blockedIPs.get(ip);
+  if (!until) return false;
+  if (Date.now() >= until) {
+    blockedIPs.delete(ip);
+    logInfo('BruteForce', `Auto-unblocked IP ${ip}`);
+    return false;
+  }
+  return true;
+}
+
+function blockIP(ip, durationMs, reason) {
+  blockedIPs.set(ip, Date.now() + durationMs);
+  logWarn('BruteForce', `Blocked IP ${ip} for ${durationMs}ms`, { reason });
+}
+
+function resetFailures(ip) {
+  failedAuthByIP.delete(ip);
+}
+
+// -------------------- Firewall --------------------
+
+function applyFirewallRules(ip) {
+  if (isBlocked(ip)) {
+    logWarn('Firewall', `IP ${ip} blocked (temporary)`);
+    return 'blocked-temp';
+  }
+  if (firewallDeny.has(ip)) {
+    logWarn('Firewall', `IP ${ip} denied (known-bad)`);
+    return 'denied';
+  }
+  if (firewallAllow.has(ip)) {
+    logInfo('Firewall', `IP ${ip} allowed`);
+    return 'allowed';
+  }
+  // default: suspicious
+  logWarn('Firewall', `IP ${ip} suspicious -> denied`);
+  return 'denied';
+}
+
+function updateFirewall({ token, action, ip }) {
+  const session = sessions.get(token);
+  if (!session) {
+    logError('FirewallUpdate', 'Invalid token');
+    return false;
+  }
+  if (session.role !== 'admin') {
+    logError('FirewallUpdate', 'Insufficient role', { role: session.role });
+    return false;
+  }
+  const { type, value } = action || {};
+  if (type === 'allow') {
+    firewallAllow.add(value);
+    firewallDeny.delete(value);
+    logInfo('FirewallUpdate', `Allowed ${value}`, { by: ip });
+    return true;
+  }
+  if (type === 'deny') {
+    firewallDeny.add(value);
+    firewallAllow.delete(value);
+    logInfo('FirewallUpdate', `Denied ${value}`, { by: ip });
+    return true;
+  }
+  logError('FirewallUpdate', 'Unknown action', { action });
+  return false;
+}
+
+// -------------------- Auth --------------------
+
+function createSession(user) {
+  const token = 'token-' + Math.random().toString(36).slice(2);
+  const expiresAt = Date.now() + CONFIG.token.ttlMs;
+  sessions.set(token, { user: user.username, role: user.role, expiresAt });
+  logInfo('Auth', `Session created for ${user.username}`, { token, expiresAt });
+  return { token, user: user.username, role: user.role, expiresAt };
+}
+
+function purgeExpiredSessions() {
+  const now = Date.now();
+  for (const [token, s] of sessions) {
+    if (s.expiresAt <= now) {
+      sessions.delete(token);
+      logInfo('Auth', `Session expired`, { token, user: s.user });
+    }
+  }
+}
+
+async function login({ username, password, ip }) {
+  // Firewall gate first
+  const fw = applyFirewallRules(ip);
+  if (fw !== 'allowed') {
+    logWarn('Auth', `Login blocked by firewall`, { ip, username });
+    return null;
+  }
+
+  // Brute force checks
+  if (isBlocked(ip)) {
+    logWarn('Auth', `IP ${ip} currently blocked`);
+    return null;
+  }
+
+  const user = CONFIG.users.find(u => u.username === username);
+  const success = !!user && user.password === password;
+
+  if (!success) {
+    const count = (failedAuthByIP.get(ip) || 0) + 1;
+    failedAuthByIP.set(ip, count);
+    logWarn('Auth', `Failed login`, { ip, username, count });
+    if (count >= CONFIG.bruteForce.failThreshold) {
+      blockIP(ip, CONFIG.bruteForce.blockDurationMs, 'Too many failures');
+      resetFailures(ip);
+    }
+    return null;
+  }
+
+  resetFailures(ip);
+  logInfo('Auth', `Successful login`, { ip, username });
+  return createSession(user);
+}
+
+// -------------------- Health --------------------
+
+function systemHealth() {
+  // Simulated metrics
+  const cpu = Math.floor(30 + Math.random() * 50); // %
+  const mem = Math.floor(40 + Math.random() * 40); // %
+  const health = { cpu, mem };
+  if (cpu > 75) logWarn('Health', `High CPU`, { cpu });
+  if (mem > 80) logWarn('Health', `High memory`, { mem });
+  return health;
+}
+
+// -------------------- Random events --------------------
+
+function randomIP() {
+  const base = ['10.0.0.', '172.16.0.', '192.168.0.'];
+  const special = ['hackerserver', '203.0.113.13'];
+  return Math.random() < 0.2
+    ? special[Math.floor(Math.random() * special.length)]
+    : base[Math.floor(Math.random() * base.length)] + Math.floor(Math.random() * 255);
+}
+
+function randomUser() {
+  const pool = [
+    { username: 'admin', password: 'nosql' },
+    { username: 'moderator', password: 'pass' },
+    { username: 'guest', password: 'guest' },
+    { username: 'guest', password: 'wrong' }, // failure
+    { username: 'attacker', password: 'unknown' } // not in users -> failure
+  ];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// -------------------- Interactive CLI --------------------
+
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+rl.setPrompt('> ');
+rl.on('line', (line) => {
+  const [cmd, ...args] = line.trim().split(/\s+/);
+  if (cmd === 'allow' && args[0]) {
+    firewallAllow.add(args[0]); firewallDeny.delete(args[0]);
+    logInfo('CLI', `Allowed ${args[0]}`);
+  } else if (cmd === 'deny' && args[0]) {
+    firewallDeny.add(args[0]); firewallAllow.delete(args[0]);
+    logInfo('CLI', `Denied ${args[0]}`);
+  } else if (cmd === 'sessions') {
+    for (const [token, s] of sessions) {
+      console.log(`Session ${token}: user=${s.user} role=${s.role} expires=${new Date(s.expiresAt).toISOString()}`);
+    }
+  } else if (cmd === 'logs') {
+    const last = Number(args[0] || 10);
+    const slice = logs.slice(-last);
+    slice.forEach(l => console.log(`[${l.timestamp}] ${l.level.toUpperCase()} ${l.topic}: ${l.message}`));
+  } else if (cmd === 'help') {
+    console.log('Commands: allow <ip>, deny <ip>, sessions, logs [n], help, quit');
+  } else if (cmd === 'quit') {
+    logInfo('CLI', 'Exiting by user command');
+    process.exit(0);
+  } else {
+    console.log('Unknown command. Type "help".');
+  }
+  rl.prompt();
+});
+
+// -------------------- Banner --------------------
+
+function banner(text) {
+  console.log(`\n=== ${text} ===\n`);
+}
+
+// -------------------- Main loop --------------------
+
+(async () => {
+  rl.prompt();
+  let cycle = 1;
+  while (CONFIG.cycleLimit === 0 || cycle <= CONFIG.cycleLimit) {
+    banner(`🔥 SentinelSim 3000 — Security Simulation Cycle ${cycle} 🔥`);
+
+    // Purge expired sessions each cycle
+    purgeExpiredSessions();
+
+    // Deterministic demo steps
+    applyFirewallRules('192.168.1.1'); // allowed by default
+    applyFirewallRules('hackerserver'); // known bad
+    applyFirewallRules('192.168.99.99'); // suspicious
+
+    // Admin login (should succeed if firewall allows)
+    const adminSession = await login({
+      username: 'admin',
+      password: 'nosql',
+      ip: '10.0.0.2'
+    });
+    logInfo('AdminSession', 'State', { session: !!adminSession });
+
+    // Guest failures to trigger brute force
+    for (let i = 0; i < 3; i++) {
+      await login({
+        username: 'guest',
+        password: 'wrong',
+        ip: '10.0.0.3'
+      });
+    }
+
+    // If admin logged in, update firewall to allow a new IP
+    if (adminSession) {
+      updateFirewall({
+        token: adminSession.token,
+        action: { type: 'allow', value: '172.16.0.5' },
+        ip: '10.0.0.2'
+      });
+      applyFirewallRules('172.16.0.5'); // now allowed
+    }
+
+    // Randomized events
+    for (let i = 0; i < 4; i++) {
+      const ip = randomIP();
+      applyFirewallRules(ip);
+      const u = randomUser();
+      await login({ username: u.username, password: u.password, ip });
+    }
+
+    // Health metrics
+    const health = systemHealth();
+    logInfo('Health', 'Current metrics', health);
+
+    // Cycle logs
+    console.log(`\n📜 Recent Logs (last 12):`);
+    logs.slice(-12).forEach(l => console.log(
+      `[${l.timestamp}] ${l.level.toUpperCase()} ${l.topic}: ${l.message}`
+    ));
+
+    cycle++;
+    await wait(CONFIG.cyclePauseMs, 'Cycle pause');
+  }
+
+  logInfo('Main', 'Cycle limit reached, exiting');
+  process.exit(0);
+})();
