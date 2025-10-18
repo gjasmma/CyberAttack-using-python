@@ -1,0 +1,154 @@
+// === ⚡ The Mad Lab ⚡ ===
+// A chaotic cyber-experiment simulator
+// Features: firewall rules, login flows, brute force detection,
+// token expiry, random lab events, rogue processes, experiment IDs,
+// system health metrics, and audit logs.
+
+const fs = require('fs');
+
+// -------------------- State --------------------
+const logs = [];
+const sessions = new Map();
+const failedAuthByIP = new Map();
+const blockedIPs = new Map();
+const firewallAllow = new Set(['192.168.1.1']);
+const firewallDeny = new Set(['hackerserver', '203.0.113.13']);
+
+// -------------------- Logging --------------------
+function log(level, topic, message) {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    level,
+    topic,
+    message
+  };
+  console.log(`[${entry.timestamp}] ${level.toUpperCase()} ${topic}: ${message}`);
+  logs.push(entry);
+  fs.appendFileSync('./madlab_audit.log', JSON.stringify(entry) + '\n');
+}
+const logInfo = (t, m) => log('info', t, m);
+const logWarn = (t, m) => log('warn', t, m);
+const logError = (t, m) => log('error', t, m);
+
+// -------------------- Utilities --------------------
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+function experimentID(cycle) {
+  return `EXP-${cycle.toString().padStart(3, '0')}-${Math.floor(Math.random()*9999)}`;
+}
+
+// -------------------- Firewall --------------------
+function applyFirewallRules(ip) {
+  if (blockedIPs.has(ip) && Date.now() < blockedIPs.get(ip)) {
+    logWarn('Firewall', `IP ${ip} temporarily blocked`);
+    return 'blocked';
+  }
+  if (firewallDeny.has(ip)) {
+    logWarn('Firewall', `IP ${ip} denied`);
+    return 'denied';
+  }
+  if (firewallAllow.has(ip)) {
+    logInfo('Firewall', `IP ${ip} allowed`);
+    return 'allowed';
+  }
+  logWarn('Firewall', `IP ${ip} suspicious -> denied`);
+  return 'denied';
+}
+
+// -------------------- Auth --------------------
+function createSession(user) {
+  const token = 'tok-' + Math.random().toString(36).slice(2);
+  const expiresAt = Date.now() + 15000;
+  sessions.set(token, { user, expiresAt });
+  logInfo('Auth', `Session created for ${user}`);
+  return { token, user, expiresAt };
+}
+function purgeExpiredSessions() {
+  const now = Date.now();
+  for (const [token, s] of sessions) {
+    if (s.expiresAt <= now) {
+      sessions.delete(token);
+      logInfo('Auth', `Session expired for ${s.user}`);
+    }
+  }
+}
+async function login({ username, password, ip }) {
+  if (applyFirewallRules(ip) !== 'allowed') return null;
+  const success = username === 'admin' && password === 'nosql';
+  if (!success) {
+    const count = (failedAuthByIP.get(ip) || 0) + 1;
+    failedAuthByIP.set(ip, count);
+    logWarn('Auth', `Failed login for ${username} from ${ip} (${count})`);
+    if (count >= 3) {
+      blockedIPs.set(ip, Date.now() + 10000);
+      logError('BruteForce', `IP ${ip} blocked for too many failures`);
+      failedAuthByIP.delete(ip);
+    }
+    return null;
+  }
+  failedAuthByIP.delete(ip);
+  return createSession(username);
+}
+
+// -------------------- Lab Flavor --------------------
+function randomLabEvent() {
+  const events = [
+    '⚡ Voltage surge in Node Reactor!',
+    '🧪 Chemical spill in containment chamber!',
+    '🔬 Quantum anomaly destabilized firewall matrix!',
+    '💥 Overload in Brute Force Containment Unit!',
+    '🧟 Rogue process escaped from sandbox!'
+  ];
+  if (Math.random() < 0.3) {
+    const msg = events[Math.floor(Math.random() * events.length)];
+    logWarn('LabEvent', msg);
+  }
+}
+function rogueProcess() {
+  if (Math.random() < 0.2) {
+    const id = 'PROC-' + Math.floor(Math.random()*10000);
+    logError('Anomaly', `Rogue process ${id} detected!`);
+    setTimeout(() => logInfo('Containment', `Rogue process ${id} neutralized.`), 1000);
+  }
+}
+function systemHealth() {
+  const cpu = Math.floor(30 + Math.random() * 50);
+  const mem = Math.floor(40 + Math.random() * 40);
+  if (cpu > 75) logWarn('Health', `High CPU ${cpu}%`);
+  if (mem > 80) logWarn('Health', `High memory ${mem}%`);
+  return { cpu, mem };
+}
+
+// -------------------- Main Loop --------------------
+(async () => {
+  fs.writeFileSync('./madlab_audit.log', `[System] The Mad Lab engaged at ${new Date().toISOString()}\n`);
+  let cycle = 1;
+  while (true) {
+    console.log(`\n=== ⚡ The Mad Lab | ${experimentID(cycle)} ⚡ ===`);
+    purgeExpiredSessions();
+
+    // Demo firewall + login
+    applyFirewallRules('192.168.1.1');
+    applyFirewallRules('hackerserver');
+    const adminSession = await login({ username: 'admin', password: 'nosql', ip: '10.0.0.2' });
+    if (adminSession) logInfo('Admin', 'Admin logged in successfully');
+
+    // Guest brute force
+    for (let i = 0; i < 3; i++) {
+      await login({ username: 'guest', password: 'wrong', ip: '10.0.0.3' });
+    }
+
+    // Lab flavor
+    randomLabEvent();
+    rogueProcess();
+    systemHealth();
+
+    // Show last logs
+    console.log(`\n📜 Recent Logs:`);
+    logs.slice(-8).forEach(l => console.log(`[${l.timestamp}] ${l.level.toUpperCase()} ${l.topic}: ${l.message}`));
+
+    cycle++;
+    await wait(2000);
+  }
+})();
