@@ -1,0 +1,97 @@
+// --- Example usage (demo) with infinite loop ---
+// No external dependencies
+
+// Fake log storage
+const logs = [];
+
+// Utility: wait for ms
+function wait(ms, label) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      logs.push({ timestamp: new Date().toISOString(), message: `Waited ${ms}ms (${label})` });
+      resolve();
+    }, ms);
+  });
+}
+
+// Stub: firewall rules
+function applyFirewallRules(ip) {
+  let status;
+  if (ip === '192.168.1.1') status = 'allowed';
+  else if (ip === 'hackerserver') status = 'blocked';
+  else status = 'suspicious -> blocked';
+
+  const message = `Firewall: ${ip} => ${status}`;
+  console.log(message);
+  logs.push({ timestamp: new Date().toISOString(), message });
+}
+
+// Stub: login flow
+async function secureLoginFlow({ username, password, ip }) {
+  const success = username === 'admin' && password === 'nosql';
+  const message = `Login attempt user=${username} ip=${ip} success=${success}`;
+  console.log(message);
+  logs.push({ timestamp: new Date().toISOString(), message });
+
+  if (success) {
+    return { token: 'fake-token-' + Date.now(), user: username };
+  }
+  return null;
+}
+
+// Stub: firewall update
+async function secureFirewallUpdateFlow({ token, action, ip }) {
+  const message = `Firewall update by ${ip} with token=${token}: ${JSON.stringify(action)}`;
+  console.log(message);
+  logs.push({ timestamp: new Date().toISOString(), message });
+}
+
+function banner(text) {
+  console.log(`\n=== ${text} ===\n`);
+}
+
+(async () => {
+  let cycle = 1;
+  while (true) {
+    banner(`🔥 Security Simulation Cycle ${cycle} 🔥`);
+
+    applyFirewallRules('192.168.1.1'); // allowed
+    applyFirewallRules('hackerserver'); // blocked
+    applyFirewallRules('192.168.99.99'); // suspicious -> blocked
+
+    // Admin login flow
+    const adminSession = await secureLoginFlow({
+      username: 'admin',
+      password: 'nosql',
+      ip: '10.0.0.2'
+    });
+    console.log('Admin Session:', adminSession);
+
+    // Guest login attempts
+    for (let i = 1; i <= 3; i++) {
+      await secureLoginFlow({
+        username: 'guest',
+        password: 'wrong',
+        ip: '10.0.0.3'
+      });
+    }
+
+    // Firewall update
+    if (adminSession) {
+      await secureFirewallUpdateFlow({
+        token: adminSession.token,
+        action: { type: 'allow', value: '172.16.0.5' },
+        ip: '10.0.0.2'
+      });
+      applyFirewallRules('172.16.0.5'); // now allowed
+    }
+
+    console.log(`\n📜 System Logs (Cycle ${cycle}):`);
+    logs.slice(-10).forEach(l =>
+      console.log(`[${l.timestamp}]`, l.message)
+    );
+
+    cycle++;
+    await wait(2000, 'Cycle pause'); // short pause before next loop
+  }
+})();
