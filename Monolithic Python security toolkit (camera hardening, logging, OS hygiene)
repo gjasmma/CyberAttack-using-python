@@ -1,0 +1,464 @@
+#!/usr/bin/env python3
+# camsec_monolith.py
+# Ethical security toolkit: camera hardening, logging, OS hygiene, and monitoring
+# Use only on systems/devices you own or have explicit permission to administer.
+
+import os
+import re
+import json
+import tarfile
+import secrets as pysecrets
+import string
+import logging
+import subprocess
+import socket
+from datetime import datetime
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
+from ipaddress import ip_network, ip_address
+from collections import Counter
+
+# =========================
+# Core: Config and Logging
+# =========================
+
+class Config:
+    CAMERA_SUBNETS = os.getenv("CAMERA_SUBNETS", "192.168.1.0/24,10.0.0.0/24").split(",")
+    SYSLOG_PATHS = os.getenv("SYSLOG_PATHS", "/var/log/syslog,/var/log/auth.log").split(",")
+    ALERT_EMAIL = os.getenv("ALERT_EMAIL", "")
+    FIREWALL_DEFAULT_POLICY = os.getenv("FW_DEFAULT", "drop")  # nftables policy: accept/drop
+    VLAN_INTERFACE = os.getenv("VLAN_IFACE", "eth0")
+    CAMERA_ALLOWLIST = os.getenv("CAM_ALLOWLIST", "192.168.1.10,192.168.1.20").split(",")
+    ALLOWLIST_TLS_PORT = int(os.getenv("TLS_PORT", "443"))
+    BACKUP_DIR = os.getenv("BACKUP_DIR", "./backups")
+    BACKUP_PATHS = os.getenv("BACKUP_PATHS", "/etc/nftables.conf,/var/log").split(",")
+    REPORT_PATH = os.getenv("REPORT_PATH", "./compliance_report.json")
+    LOGFILE = os.getenv("LOGFILE", "camsec.log")
+
+
+def get_logger(name: str, logfile: str = None) -> logging.Logger:
+    logger = logging.getLogger(name)
+    if logger.handlers:
+        return logger
+    logger.setLevel(logging.INFO)
+    handler = RotatingFileHandler(logfile or Config.LOGFILE, maxBytes=10_000_000, backupCount=5)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    # Also log to console
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    return logger
+
+log = get_logger("camsec")
+
+def run_cmd(cmd: list[str]) -> tuple[int, str, str]:
+    log.debug("Running command: %s", " ".join(cmd))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    out, err = proc.communicate()
+    return proc.returncode, out.strip(), err.strip()
+
+# =========================
+# Camera: Discovery
+# =========================
+
+def ping_host(host: str, timeout: float = 0.3) -> bool:
+    # Lightweight reachability placeholder; replace with actual ping if desired.
+    try:
+        socket.gethostbyname(host)
+        return True
+    except socket.error:
+        return False
+
+def discover_hosts() -> list[str]:
+    hosts = []
+    for subnet in Config.CAMERA_SUBNETS:
+        try:
+            net = ip_network(subnet, strict=False)
+        except ValueError:
+            log.warning("Invalid subnet provided: %s", subnet)
+            continue
+        for ip in net.hosts():
+            ip_s = str(ip)
+            if ping_host(ip_s):
+                hosts.append(ip_s)
+    log.info("Discovered %d hosts across subnets: %s", len(hosts), hosts)
+    return hosts
+
+# =========================
+# Camera: Hardening (Stubs)
+# =========================
+
+SECURE_SETTINGS = {
+    "disable_default_accounts": True,
+    "enforce_min_password_length": 14,
+    "password_rotation_days": 90,
+    "lockout_threshold": 5,
+    "tls_enabled": True,
+    "rtsp_auth_required": True,
+    "upnp_disabled": True,
+    "onvif_strict": True,
+    "ntp_secure": True,
+    "expose_http": False,  # prefer HTTPS only
+    "audit_logging": True,
+    "vlan_isolation": True,
+}
+
+class CameraClient:
+    """
+    Placeholder client—replace with vendor SDK or ONVIF client for actual operations.
+    """
+    def __init__(self, ip: str):
+        self.ip = ip
+
+    def apply_setting(self, key: str, value):
+        log.info("[Camera %s] Applying %s=%s", self.ip, key, value)
+        # TODO: Implement via camera API (e.g., ONVIF/HTTP)
+        return True
+
+    def get_firmware_version(self) -> str:
+        # TODO: Replace with vendor call
+        version = "1.2.3"
+        log.info("[Camera %s] Firmware version: %s", self.ip, version)
+        return version
+
+    def update_firmware(self, target_version: str) -> bool:
+        # TODO: Replace with vendor call
+        log.info("[Camera %s] Updating firmware to %s", self.ip, target_version)
+        return True
+
+    def set_credentials(self, user: str, password: str) -> bool:
+        # TODO: Replace with vendor call
+        log.info("[Camera %s] Rotated credentials for user %s", self.ip, user)
+        return True
+
+def harden_camera(ip: str) -> dict:
+    client = CameraClient(ip)
+    results = {}
+    for k, v in SECURE_SETTINGS.items():
+        ok = client.apply_setting(k, v)
+        results[k] = "applied" if ok else "failed"
+    return results
+
+def check_firmware_version(ip: str) -> str:
+    client = CameraClient(ip)
+    return client.get_firmware_version()
+
+def update_firmware(ip: str, target_version: str) -> bool:
+    client = CameraClient(ip)
+    return client.update_firmware(target_version)
+
+# =========================
+# Camera: Credentials
+# =========================
+
+def strong_password(length: int = 20) -> str:
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*_+-="
+    return "".join(pysecrets.choice(alphabet) for _ in range(length))
+
+def rotate_credentials(ip: str, user: str) -> str:
+    pwd = strong_password()
+    client = CameraClient(ip)
+    client.set_credentials(user, pwd)
+    return pwd
+
+# =========================
+# Camera: Network Controls
+# =========================
+
+def place_on_vlan(interface: str, vlan_id: int) -> bool:
+    rc, out, err = run_cmd(["nmcli", "connection", "add", "type", "vlan",
+                            "ifname", f"{interface}.{vlan_id}", "con-name", f"cam-vlan-{vlan_id}",
+                            "dev", interface, "id", str(vlan_id)])
+    if rc == 0:
+        log.info("Configured VLAN %d on %s", vlan_id, interface)
+        return True
+    log.error("VLAN config failed: %s", err)
+    return False
+
+# =========================
+# Monitoring: Log Ingest (fixed)
+# =========================
+
+def parse_line(line: str) -> dict | None:
+    # Auth failures: e.g., "Failed password for invalid user bob from 192.168.1.5"
+    auth = re.search(r"Failed password for (invalid user )?(\w+) from (\d+\.\d+\.\d+\.\d+)", line)
+    if auth:
+        return {"type": "auth_fail", "user": auth.group(2), "ip": auth.group(3)}
+
+    # Kernel logs: e.g., "kernel: [12345.678901] something happened"
+    kernel = re.search(r"kernel:\s*
+
+\[[^\]
+
+]*\]
+
+\s*(.*)", line)
+    if kernel:
+        return {"type": "kernel", "detail": kernel.group(1)}
+
+    # App/process logs: e.g., "sshd[1234]: message here"
+    app = re.search(r"(\w+)
+
+\[\d+\]
+
+:\s*(.*)", line)
+    if app:
+        return {"type": "app", "process": app.group(1), "detail": app.group(2)}
+
+    return None
+
+def read_logs(paths: list[str] = None) -> list[dict]:
+    paths = paths or Config.SYSLOG_PATHS
+    events = []
+    for path in paths:
+        p = Path(path)
+        if not p.exists():
+            log.warning("Log path not found: %s", path)
+            continue
+        try:
+            for line in p.read_text(errors="ignore").splitlines():
+                evt = parse_line(line)
+                if evt:
+                    events.append(evt)
+        except Exception as e:
+            log.error("Failed reading %s: %s", path, e)
+    log.info("Ingested %d events from %d paths", len(events), len(paths))
+    return events
+
+# =========================
+# Monitoring: Anomalies
+# =========================
+
+def detect_bruteforce(events: list[dict], threshold: int = 5) -> list[dict]:
+    attempts = Counter(e["ip"] for e in events if e.get("type") == "auth_fail")
+    alerts = [{"type": "bruteforce", "ip": ip, "count": cnt} for ip, cnt in attempts.items() if cnt >= threshold]
+    if alerts:
+        log.info("Detected brute force: %s", alerts)
+    return alerts
+
+def detect_unusual_process(events: list[dict], baseline: set[str]) -> list[dict]:
+    procs = set(e["process"] for e in events if e.get("type") == "app")
+    unknown = procs - baseline
+    alerts = [{"type": "unknown_process", "process": p} for p in unknown]
+    if alerts:
+        log.info("Detected unusual processes: %s", alerts)
+    return alerts
+
+# =========================
+# Monitoring: Alerts
+# =========================
+
+def send_alert(alert: dict):
+    # Extend with email/webhook/SIEM integrations
+    log.warning("ALERT: %s", alert)
+    # Example: send email if ALERT_EMAIL configured (placeholder)
+
+# =========================
+# System: OS Hardening
+# =========================
+
+def enforce_secure_sysctl() -> bool:
+    settings = {
+        "net.ipv4.ip_forward": "0",
+        "net.ipv4.conf.all.accept_redirects": "0",
+        "net.ipv4.conf.all.send_redirects": "0",
+        "net.ipv4.conf.all.rp_filter": "1",
+        "net.ipv4.tcp_syncookies": "1",
+    }
+    ok = True
+    for k, v in settings.items():
+        rc, out, err = run_cmd(["sysctl", f"{k}={v}"])
+        if rc != 0:
+            log.error("sysctl set failed for %s: %s", k, err)
+            ok = False
+        else:
+            log.info("sysctl set %s=%s", k, v)
+    return ok
+
+def disable_services(services: list[str]) -> None:
+    for svc in services:
+        rc, out, err = run_cmd(["systemctl", "disable", "--now", svc])
+        if rc == 0:
+            log.info("Disabled service: %s", svc)
+        else:
+            log.error("Failed to disable %s: %s", svc, err)
+
+# =========================
+# System: Firewall (nftables)
+# =========================
+
+def ensure_nft_setup() -> None:
+    """
+    Ensure basic table/chain exist. Adjust to your distro's nftables base config.
+    """
+    # Create inet/filter table if missing
+    run_cmd(["nft", "add", "table", "inet", "filter"])
+    # Create chains with default policy if missing
+    run_cmd(["nft", "add", "chain", "inet", "filter", "input", "{ type filter hook input priority 0; policy accept; }"])
+    run_cmd(["nft", "add", "chain", "inet", "filter", "output", "{ type filter hook output priority 0; policy accept; }"])
+    run_cmd(["nft", "add", "chain", "inet", "filter", "forward", "{ type filter hook forward priority 0; policy accept; }"])
+
+def set_default_policy(chain: str = "input", policy: str | None = None) -> bool:
+    policy = policy or Config.FIREWALL_DEFAULT_POLICY
+    # Correct way to set policy: redefine chain with policy
+    rc, out, err = run_cmd(["nft", "chain", "inet", "filter", chain, "{", "policy", policy, ";", "}"])
+    if rc == 0:
+        log.info("Set %s chain default policy to %s", chain.upper(), policy.upper())
+        return True
+    log.error("Failed to set policy: %s", err)
+    return False
+
+def allowlist_ips(ips: list[str], port: int) -> None:
+    for ip in ips:
+        try:
+            ip_address(ip)
+        except ValueError:
+            log.warning("Invalid IP in allowlist: %s", ip)
+            continue
+        rc, out, err = run_cmd(["nft", "add", "rule", "inet", "filter", "input",
+                                "ip", "saddr", ip, "tcp", "dport", str(port), "accept"])
+        if rc == 0:
+            log.info("Allow %s on TCP port %d", ip, port)
+        else:
+            log.error("Allow rule failed for %s: %s", ip, err)
+
+# =========================
+# System: Secrets (Fernet)
+# =========================
+
+def get_key(path="camsec.key") -> bytes:
+    try:
+        from cryptography.fernet import Fernet
+    except ImportError:
+        log.error("cryptography package not installed. Install with: pip install cryptography")
+        raise
+    if not os.path.exists(path):
+        key = Fernet.generate_key()
+        with open(path, "wb") as f:
+            f.write(key)
+    with open(path, "rb") as f:
+        return f.read()
+
+def encrypt_secret(data: str, key: bytes) -> bytes:
+    from cryptography.fernet import Fernet
+    return Fernet(key).encrypt(data.encode())
+
+def decrypt_secret(token: bytes, key: bytes) -> str:
+    from cryptography.fernet import Fernet
+    return Fernet(key).decrypt(token).decode()
+
+# =========================
+# System: Backups
+# =========================
+
+def backup_paths(paths: list[str], out_dir: str = None) -> str:
+    out_dir = out_dir or Config.BACKUP_DIR
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    fname = f"backup_{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.tar.gz"
+    full_path = Path(out_dir) / fname
+    with tarfile.open(full_path, "w:gz") as tar:
+        for p in paths:
+            path = Path(p)
+            if path.exists():
+                tar.add(path, arcname=path.name)
+            else:
+                log.warning("Backup path missing: %s", p)
+    log.info("Backup created: %s", full_path)
+    return str(full_path)
+
+# =========================
+# Compliance: Checks/Report
+# =========================
+
+def evaluate_compliance() -> dict:
+    # Replace placeholders with real evaluation calls
+    checks = {
+        "firmware_current": False,  # implement verification
+        "default_accounts_removed": SECURE_SETTINGS["disable_default_accounts"],
+        "https_only": SECURE_SETTINGS["tls_enabled"] and not SECURE_SETTINGS["expose_http"],
+        "audit_logging": SECURE_SETTINGS["audit_logging"],
+        "vlan_isolation": SECURE_SETTINGS["vlan_isolation"],
+    }
+    return {k: bool(v) for k, v in checks.items()}
+
+def generate_report(results: dict) -> str:
+    doc = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "results": results,
+        "summary": f"{sum(results.values())}/{len(results)} controls passing"
+    }
+    return json.dumps(doc, indent=2)
+
+def save_report(report_json: str, path: str = None) -> str:
+    path = path or Config.REPORT_PATH
+    Path(Path(path).parent).mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        f.write(report_json)
+    log.info("Compliance report saved to %s", path)
+    return path
+
+# =========================
+# Orchestrator
+# =========================
+
+def main():
+    log.info("=== CAMSEC START ===")
+
+    # OS hardening
+    log.info("Applying secure sysctl settings...")
+    enforce_secure_sysctl()
+    log.info("Disabling unnecessary services...")
+    disable_services(["telnet", "vsftpd"])  # adjust as needed
+
+    # Firewall
+    log.info("Ensuring nftables base setup...")
+    ensure_nft_setup()
+    log.info("Setting firewall default policy...")
+    set_default_policy("input", Config.FIREWALL_DEFAULT_POLICY)
+    log.info("Allowlisting camera management IPs...")
+    allowlist_ips(Config.CAMERA_ALLOWLIST, Config.ALLOWLIST_TLS_PORT)
+
+    # Camera operations
+    log.info("Discovering cameras/hosts...")
+    hosts = discover_hosts()
+    for ip in hosts:
+        log.info("[Camera %s] Hardening...", ip)
+        results = harden_camera(ip)
+        log.info("[Camera %s] Hardening results: %s", ip, results)
+
+        version = check_firmware_version(ip)
+        log.info("[Camera %s] Firmware version: %s", ip, version)
+
+        # Rotate admin credentials (store securely; example shows encrypting)
+        new_pwd = rotate_credentials(ip, user="admin")
+        try:
+            key = get_key()
+            enc_pwd = encrypt_secret(new_pwd, key)
+            # In a real system, store enc_pwd in a secrets manager or vault
+            log.info("[Camera %s] Admin password rotated and encrypted (token length=%d).", ip, len(enc_pwd))
+        except Exception:
+            log.warning("[Camera %s] Password rotated but not encrypted (cryptography missing).", ip)
+
+    # Logs and anomalies
+    log.info("Reading system logs...")
+    events = read_logs()
+    for alert in detect_bruteforce(events, threshold=5):
+        send_alert(alert)
+    for alert in detect_unusual_process(events, baseline={"sshd", "systemd", "cron"}):
+        send_alert(alert)
+
+    # Backup and compliance
+    log.info("Creating backups...")
+    backup_paths(Config.BACKUP_PATHS, out_dir=Config.BACKUP_DIR)
+
+    log.info("Evaluating compliance...")
+    results = evaluate_compliance()
+    report_json = generate_report(results)
+    save_report(report_json, path=Config.REPORT_PATH)
+
+    log.info("=== CAMSEC COMPLETE ===")
+
+if __name__ == "__main__":
+    main()
