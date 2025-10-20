@@ -1,0 +1,68 @@
+import socket
+import requests
+import subprocess
+
+def get_local_ip():
+    hostname = socket.gethostname()
+    return socket.gethostbyname(hostname)
+
+def get_public_ip():
+    try:
+        response = requests.get("https://api.ipify.org?format=json", timeout=5)
+        return response.json()["ip"]
+    except Exception as e:
+        return f"Error fetching public IP: {e}"
+
+def ping_host(host="8.8.8.8"):
+    try:
+        result = subprocess.run(
+            ["ping", "-n", "4", host], capture_output=True, text=True
+        )
+        return result.stdout
+    except Exception as e:
+        return f"Error pinging host: {e}"
+
+def simple_port_scan(host="127.0.0.1", ports=[22, 80, 443]):
+    open_ports = []
+    for port in ports:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        try:
+            s.connect((host, port))
+            open_ports.append(port)
+        except:
+            pass
+        finally:
+            s.close()
+    return open_ports
+
+def menu():
+    while True:
+        print("\n=== Security Learning Toolkit ===")
+        print("1. Show Local IP")
+        print("2. Show Public IP")
+        print("3. Ping a Host")
+        print("4. Simple Port Scan")
+        print("5. Exit")
+
+        choice = input("Choose an option (1-5): ")
+
+        if choice == "1":
+            print(f"Local IP Address: {get_local_ip()}")
+        elif choice == "2":
+            print(f"Public IP Address: {get_public_ip()}")
+        elif choice == "3":
+            host = input("Enter host to ping (default 8.8.8.8): ") or "8.8.8.8"
+            print(ping_host(host))
+        elif choice == "4":
+            host = input("Enter host to scan (default 127.0.0.1): ") or "127.0.0.1"
+            ports = [22, 80, 443, 3389]  # common ports
+            print(f"Open ports on {host}: {simple_port_scan(host, ports)}")
+        elif choice == "5":
+            print("Exiting... Goodbye!")
+            break
+        else:
+            print("Invalid choice, try again.")
+
+if __name__ == "__main__":
+    menu()
