@@ -1,0 +1,21 @@
+Compile rules:
+
+python sec_compiler.py compile --rules rules.txt
+
+One-time actions:
+
+python sec_compiler.py scan /path/to/target
+
+python sec_compiler.py url https://example.com
+
+python sec_compiler.py ip 203.0.113.23
+
+python sec_compiler.py process
+
+python sec_compiler.py ransomware --dir /path/to/dir
+
+Continuous loop (console):
+
+python sec_compiler.py loop --modules process ransomware --interval 60
+
+python sec_compiler.py loop --modules scan url ip --path /path/to/dir --url https://example.com --ip 203.0.113.23 --interval 120
