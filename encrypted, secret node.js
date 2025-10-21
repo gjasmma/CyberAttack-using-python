@@ -1,0 +1,127 @@
+// main.js
+const crypto = require("crypto");
+const fs = require("fs");
+
+// --- Firewall-like IP blocker ---
+const blockedIPs = new Set(["192.168.1.100"]);
+
+function checkIP(ip) {
+  if (blockedIPs.has(ip)) {
+    logEvent(`Access denied for ${ip}`);
+    console.log(`Access denied for: ${ip}`);
+    return false;
+  }
+  logEvent(`Access granted for ${ip}`);
+  console.log(`Access granted for: ${ip}`);
+  return true;
+}
+
+// --- Secure login with hashed passwords ---
+const users = {
+  alice: crypto.createHash("sha256").update("mypassword").digest("hex"),
+};
+
+// Simple rate limiter (max 3 attempts per user per minute)
+const loginAttempts = new Map();
+
+function login(username, password) {
+  const now = Date.now();
+  const attempts = loginAttempts.get(username) || [];
+  const recentAttempts = attempts.filter(t => now - t < 60_000);
+
+  if (recentAttempts.length >= 3) {
+    logEvent(`Rate limit exceeded for ${username}`);
+    console.log("Too many attempts. Try again later.");
+    return false;
+  }
+
+  const hash = crypto.createHash("sha256").update(password).digest("hex");
+  if (users[username] && users[username] === hash) {
+    logEvent(`Login successful for ${username}`);
+    console.log("Login successful");
+    loginAttempts.set(username, []);
+    return true;
+  }
+
+  recentAttempts.push(now);
+  loginAttempts.set(username, recentAttempts);
+  logEvent(`Login failed for ${username}`);
+  console.log("Login failed");
+  return false;
+}
+
+// --- AES Encryption/Decryption for strings ---
+function encrypt(text, secretKey) {
+  const iv = crypto.randomBytes(16);
+  const key = crypto.createHash("sha256").update(secretKey).digest();
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return { iv: iv.toString("hex"), content: encrypted };
+}
+
+function decrypt(encryptedData, secretKey) {
+  const key = crypto.createHash("sha256").update(secretKey).digest();
+  const iv = Buffer.from(encryptedData.iv, "hex");
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  let decrypted = decipher.update(encryptedData.content, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
+
+// --- AES File Encryption/Decryption ---
+function encryptFile(inputPath, outputPath, secretKey) {
+  const iv = crypto.randomBytes(16);
+  const key = crypto.createHash("sha256").update(secretKey).digest();
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+
+  const input = fs.createReadStream(inputPath);
+  const output = fs.createWriteStream(outputPath);
+
+  // Write IV at the start of the file so we can use it for decryption
+  output.write(iv);
+
+  input.pipe(cipher).pipe(output);
+  logEvent(`File encrypted: ${inputPath} -> ${outputPath}`);
+}
+
+function decryptFile(inputPath, outputPath, secretKey) {
+  const key = crypto.createHash("sha256").update(secretKey).digest();
+  const input = fs.createReadStream(inputPath);
+
+  let iv;
+  input.once("readable", () => {
+    iv = input.read(16); // first 16 bytes are the IV
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+    const output = fs.createWriteStream(outputPath);
+    input.pipe(decipher).pipe(output);
+    logEvent(`File decrypted: ${inputPath} -> ${outputPath}`);
+  });
+}
+
+// --- Audit logging ---
+function logEvent(message) {
+  const timestamp = new Date().toISOString();
+  const entry = `[${timestamp}] ${message}\n`;
+  fs.appendFileSync("audit.log", entry);
+}
+
+// --- Example usage ---
+checkIP("192.168.1.100"); // denied
+checkIP("10.0.0.5");      // allowed
+
+login("alice", "wrongpass");
+login("alice", "wrongpass");
+login("alice", "wrongpass");
+login("alice", "mypassword"); // should be rate-limited
+
+// String encryption demo
+const secret = "superSecretKey123";
+const encrypted = encrypt("Sensitive data here", secret);
+console.log("Encrypted:", encrypted);
+console.log("Decrypted:", decrypt(encrypted, secret));
+
+// File encryption demo
+// Create a test file first: fs.writeFileSync("secret.txt", "This is top secret!");
+encryptFile("secret.txt", "secret.enc", secret);
+decryptFile("secret.enc", "secret_decrypted.txt", secret);
