@@ -2,15 +2,42 @@ import socket
 import getpass
 import random
 import time
+import hashlib
+import os
 
 ALLOWED_PORTS = [80, 443, 22, 8080]
 SUSPICIOUS_PORTS = [666, 1337, 31337]
+LOG_FILE = "security_console.log"
+
+# --- Utility: Logging ---
+def log_event(message):
+    with open(LOG_FILE, "a") as f:
+        f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {message}\n")
 
 # --- Banner ---
 def show_banner():
-    print("=" * 40)
+    print("=" * 45)
     print("        SECURITY CONSOLE (Demo)        ")
-    print("=" * 40)
+    print("=" * 45)
+
+# --- Login System with Hashed Passwords ---
+def login_system():
+    # Demo: default user is "admin" with password "password"
+    stored_user = "admin"
+    stored_hash = hashlib.sha256("password".encode()).hexdigest()
+
+    username = input("Username: ")
+    password = getpass.getpass("Password: ")
+    entered_hash = hashlib.sha256(password.encode()).hexdigest()
+
+    if username == stored_user and entered_hash == stored_hash:
+        print("✅ Login successful.")
+        log_event(f"User '{username}' logged in successfully.")
+        return True
+    else:
+        print("❌ Invalid credentials.")
+        log_event(f"Failed login attempt for user '{username}'.")
+        return False
 
 # --- Core Firewall Check ---
 def firewall_defense(port_input):
@@ -18,12 +45,15 @@ def firewall_defense(port_input):
         port = int(port_input)
         if port in ALLOWED_PORTS:
             print("✅ Port is secure. Access granted.")
+            log_event(f"Port {port} allowed.")
             return True
         elif port in SUSPICIOUS_PORTS:
             print("⚠️ Suspicious port detected! Potential cyber attack.")
+            log_event(f"Suspicious port {port} detected.")
             return False
         else:
             print("❓ Port not recognized. Connection denied.")
+            log_event(f"Unknown port {port} denied.")
             return False
     except ValueError:
         print("❌ Invalid input. Please enter a valid port number.")
@@ -35,6 +65,7 @@ def ip_detector():
     ip_address = socket.gethostbyname(hostname)
     print(f"🖥️ Hostname: {hostname}")
     print(f"🌐 Local IP Address: {ip_address}")
+    log_event("IP Detector used.")
 
 # --- Feature 2: Password Changer (demo only) ---
 def password_changer():
@@ -43,6 +74,7 @@ def password_changer():
     confirm_pass = getpass.getpass("Confirm new password: ")
     if new_pass == confirm_pass:
         print("🔐 Password successfully changed (demo).")
+        log_event("Password changed (demo).")
     else:
         print("❌ Passwords do not match. Try again.")
 
@@ -51,12 +83,14 @@ def malware_detector():
     print("🦠 Scanning system for malware...")
     time.sleep(2)
     print("✅ No malware detected. System clean.")
+    log_event("Malware scan completed.")
 
 # --- Feature 4: Ransomware Detector (simulated) ---
 def ransomware_detector():
     print("🔒 Checking for ransomware activity...")
     time.sleep(2)
     print("✅ No ransomware signatures found.")
+    log_event("Ransomware scan completed.")
 
 # --- Feature 5: DoS Attack Checker (simulated) ---
 def dos_checker():
@@ -65,8 +99,10 @@ def dos_checker():
     suspicious = random.choice([True, False])
     if suspicious:
         print("⚠️ High traffic anomaly detected! Possible DoS attempt.")
+        log_event("DoS anomaly detected.")
     else:
         print("✅ Traffic levels normal.")
+        log_event("DoS check normal.")
 
 # --- Feature 6: Website Analyzer (demo) ---
 def website_analyzer():
@@ -76,6 +112,7 @@ def website_analyzer():
     print("✅ SSL Certificate: Valid")
     print("✅ Response Time: 120ms")
     print("✅ No known vulnerabilities found (demo).")
+    log_event(f"Website analyzed: {url}")
 
 # --- Feature 7: Port Scanner (simulated) ---
 def port_scanner():
@@ -83,25 +120,46 @@ def port_scanner():
     time.sleep(2)
     open_ports = [22, 80, 443]
     print(f"✅ Open ports detected: {open_ports}")
+    log_event("Port scan completed.")
 
-# --- Feature 8: System Log Viewer (demo) ---
+# --- Feature 8: System Log Viewer ---
 def log_viewer():
-    print("📜 Displaying last 3 log entries (demo):")
-    print("[INFO] System boot successful.")
-    print("[INFO] Firewall active.")
-    print("[WARN] Suspicious login attempt detected.")
+    print("📜 Displaying last 5 log entries:")
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            lines = f.readlines()[-5:]
+            for line in lines:
+                print(line.strip())
+    else:
+        print("No logs available.")
 
 # --- Feature 9: Encryption Demo ---
 def encryption_demo():
     text = input("Enter text to encrypt: ")
     encrypted = "".join(chr(ord(c) + 3) for c in text)  # Caesar cipher
     print(f"🔐 Encrypted text: {encrypted}")
+    log_event("Encryption demo used.")
 
 # --- Feature 10: User Session Monitor (simulated) ---
 def session_monitor():
     print("👥 Active sessions:")
     print(" - admin (192.168.1.10)")
     print(" - guest (192.168.1.15)")
+    log_event("Session monitor viewed.")
+
+# --- Feature 11: Real-time System Monitor (simulated) ---
+def system_monitor():
+    print("📊 Real-time System Monitor (press Ctrl+C to stop)")
+    try:
+        while True:
+            cpu = random.randint(1, 100)
+            ram = random.randint(1, 100)
+            print(f"CPU Usage: [{'#' * (cpu // 5)}{' ' * (20 - cpu // 5)}] {cpu}%")
+            print(f"RAM Usage: [{'#' * (ram // 5)}{' ' * (20 - ram // 5)}] {ram}%\n")
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nExiting System Monitor...")
+        log_event("System monitor stopped.")
 
 # --- Main Menu ---
 def main_menu():
@@ -117,7 +175,8 @@ def main_menu():
         print("8. Log Viewer")
         print("9. Encryption Demo")
         print("10. Session Monitor")
-        print("11. Exit")
+        print("11. System Monitor")
+        print("12. Exit")
         choice = input("Select an option: ")
 
         if choice == "1":
@@ -141,6 +200,8 @@ def main_menu():
         elif choice == "10":
             session_monitor()
         elif choice == "11":
+            system_monitor()
+        elif choice == "12":
             print("👋 Exiting Security Console. Stay safe!")
             break
         else:
@@ -149,6 +210,7 @@ def main_menu():
 # --- Entry Point ---
 if __name__ == "__main__":
     show_banner()
-    user_input = input("Enter a port number to connect: ")
-    if firewall_defense(user_input):
-        main_menu()
+    if login_system():
+        user_input = input("Enter a port number to connect: ")
+        if firewall_defense(user_input):
+            main_menu()
