@@ -1,0 +1,154 @@
+import socket
+import getpass
+import random
+import time
+
+ALLOWED_PORTS = [80, 443, 22, 8080]
+SUSPICIOUS_PORTS = [666, 1337, 31337]
+
+# --- Banner ---
+def show_banner():
+    print("=" * 40)
+    print("        SECURITY CONSOLE (Demo)        ")
+    print("=" * 40)
+
+# --- Core Firewall Check ---
+def firewall_defense(port_input):
+    try:
+        port = int(port_input)
+        if port in ALLOWED_PORTS:
+            print("✅ Port is secure. Access granted.")
+            return True
+        elif port in SUSPICIOUS_PORTS:
+            print("⚠️ Suspicious port detected! Potential cyber attack.")
+            return False
+        else:
+            print("❓ Port not recognized. Connection denied.")
+            return False
+    except ValueError:
+        print("❌ Invalid input. Please enter a valid port number.")
+        return False
+
+# --- Feature 1: IP Detector ---
+def ip_detector():
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
+    print(f"🖥️ Hostname: {hostname}")
+    print(f"🌐 Local IP Address: {ip_address}")
+
+# --- Feature 2: Password Changer (demo only) ---
+def password_changer():
+    old_pass = getpass.getpass("Enter current password: ")
+    new_pass = getpass.getpass("Enter new password: ")
+    confirm_pass = getpass.getpass("Confirm new password: ")
+    if new_pass == confirm_pass:
+        print("🔐 Password successfully changed (demo).")
+    else:
+        print("❌ Passwords do not match. Try again.")
+
+# --- Feature 3: Malware Detector (simulated) ---
+def malware_detector():
+    print("🦠 Scanning system for malware...")
+    time.sleep(2)
+    print("✅ No malware detected. System clean.")
+
+# --- Feature 4: Ransomware Detector (simulated) ---
+def ransomware_detector():
+    print("🔒 Checking for ransomware activity...")
+    time.sleep(2)
+    print("✅ No ransomware signatures found.")
+
+# --- Feature 5: DoS Attack Checker (simulated) ---
+def dos_checker():
+    print("📡 Monitoring traffic for DoS patterns...")
+    time.sleep(2)
+    suspicious = random.choice([True, False])
+    if suspicious:
+        print("⚠️ High traffic anomaly detected! Possible DoS attempt.")
+    else:
+        print("✅ Traffic levels normal.")
+
+# --- Feature 6: Website Analyzer (demo) ---
+def website_analyzer():
+    url = input("Enter website URL: ")
+    print(f"🌍 Analyzing {url} ...")
+    time.sleep(2)
+    print("✅ SSL Certificate: Valid")
+    print("✅ Response Time: 120ms")
+    print("✅ No known vulnerabilities found (demo).")
+
+# --- Feature 7: Port Scanner (simulated) ---
+def port_scanner():
+    print("🔎 Scanning common ports...")
+    time.sleep(2)
+    open_ports = [22, 80, 443]
+    print(f"✅ Open ports detected: {open_ports}")
+
+# --- Feature 8: System Log Viewer (demo) ---
+def log_viewer():
+    print("📜 Displaying last 3 log entries (demo):")
+    print("[INFO] System boot successful.")
+    print("[INFO] Firewall active.")
+    print("[WARN] Suspicious login attempt detected.")
+
+# --- Feature 9: Encryption Demo ---
+def encryption_demo():
+    text = input("Enter text to encrypt: ")
+    encrypted = "".join(chr(ord(c) + 3) for c in text)  # Caesar cipher
+    print(f"🔐 Encrypted text: {encrypted}")
+
+# --- Feature 10: User Session Monitor (simulated) ---
+def session_monitor():
+    print("👥 Active sessions:")
+    print(" - admin (192.168.1.10)")
+    print(" - guest (192.168.1.15)")
+
+# --- Main Menu ---
+def main_menu():
+    while True:
+        print("\n--- Security Console ---")
+        print("1. IP Detector")
+        print("2. Password Changer")
+        print("3. Malware Detector")
+        print("4. Ransomware Detector")
+        print("5. DoS Checker")
+        print("6. Website Analyzer")
+        print("7. Port Scanner")
+        print("8. Log Viewer")
+        print("9. Encryption Demo")
+        print("10. Session Monitor")
+        print("11. Exit")
+        choice = input("Select an option: ")
+
+        if choice == "1":
+            ip_detector()
+        elif choice == "2":
+            password_changer()
+        elif choice == "3":
+            malware_detector()
+        elif choice == "4":
+            ransomware_detector()
+        elif choice == "5":
+            dos_checker()
+        elif choice == "6":
+            website_analyzer()
+        elif choice == "7":
+            port_scanner()
+        elif choice == "8":
+            log_viewer()
+        elif choice == "9":
+            encryption_demo()
+        elif choice == "10":
+            session_monitor()
+        elif choice == "11":
+            print("👋 Exiting Security Console. Stay safe!")
+            break
+        else:
+            print("❌ Invalid choice. Please try again.")
+
+# --- Entry Point ---
+if __name__ == "__main__":
+    show_banner()
+    user_input = input("Enter a port number to connect: ")
+    if firewall_defense(user_input):
+        main_menu()
