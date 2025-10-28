@@ -1,0 +1,66 @@
+2025-10-28 12:28:33,256 INFO Serving on 127.0.0.1:8090
+2025-10-28 12:28:33,538 INFO req_id=16f7a45a-ad55-40a6-94b9-7e83404ecb57 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,539 INFO req_id=c9d8ba0f-d92e-4ce3-a6df-dea7479f3fef ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:28:33,540 INFO req_id=ceb9a7e1-601f-4eca-ac09-db7d88494dad ip=127.0.0.1 method=POST path=/firewall/block
+2025-10-28 12:28:33,540 INFO firewall add cidr=127.0.0.1/32
+2025-10-28 12:28:33,541 INFO req_id=dfa8b11f-0ad3-43f3-911e-24d161e00ede ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,541 INFO req_id=e0f86fcf-7d70-4aee-b079-ab2fa7630d4f ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,543 INFO req_id=4563ee2f-8b92-41cc-8b92-4e32fa129288 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,544 INFO req_id=b790ef94-77b6-4790-a14c-39abb73f813d ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,544 INFO req_id=a72c706b-ec9c-4d8e-b143-99304c186b53 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,545 INFO req_id=3a3a8528-acff-4a9f-8dfb-64376f4f1a0d ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,545 INFO req_id=1cb014e4-eb69-486b-96c4-f7e0dc85d226 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,546 INFO req_id=05b56757-189c-4231-a6ce-9672c6429e41 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,547 INFO req_id=5a5e50de-5a5c-4cb6-ad1a-a205b2ccd337 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,548 INFO req_id=ec1fca96-2d71-404f-83e8-bfc4cdec0f34 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,548 INFO req_id=0571438f-6828-48a3-80a9-01d3a8d3fcd5 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,549 INFO req_id=f5a9ffdb-1755-40ed-bd1a-a19df143d415 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,550 INFO req_id=51aab9d1-2d51-4d9e-a090-7f8c7f2a2003 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,550 INFO req_id=80ded285-3caf-40b5-9d4a-32d69f42e943 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:28:33,551 INFO req_id=89b969a2-4642-4a3c-97c7-246cbcb2f762 ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:28:33,552 INFO req_id=449f9989-2dbb-4cfb-b18e-fad7f325baae ip=127.0.0.1 method=POST path=/tasks/execute
+2025-10-28 12:28:33,554 INFO req_id=a5a68166-f856-4e3a-a7a5-c3fed75d1fd5 ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:29:42,787 INFO Serving on 127.0.0.1:8090
+2025-10-28 12:29:43,083 INFO req_id=3922be13-7ee5-49ea-9e8d-f3e44715b912 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,087 INFO req_id=0e0de0bc-6fd0-40cb-8296-fd94f4fa8bc4 ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:29:43,088 INFO req_id=4e185f62-ef83-4211-bf92-86ca5432961b ip=127.0.0.1 method=POST path=/firewall/block
+2025-10-28 12:29:43,088 INFO firewall add cidr=127.0.0.1/32
+2025-10-28 12:29:43,088 INFO req_id=5a838517-e7f0-4f6e-b3e3-3a283d37cbad ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,089 INFO req_id=1effca52-59f2-4f1e-aed6-e00fb52842dc ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,090 INFO req_id=6735d948-5383-42b6-bb47-398cd10135a7 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,091 INFO req_id=8ac7e554-3373-498a-81db-e85e604a0bb5 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,091 INFO req_id=1d87cb17-9a7e-45cd-8f37-ce87a3168b84 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,092 INFO req_id=69b6d386-8a8f-4582-b086-70a5ed91a9d4 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,092 INFO req_id=d79fadd4-2ae1-4ecc-b131-5c7cae23908b ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,093 INFO req_id=f40e415c-d5bc-4a26-961f-70d1f019d2ba ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,094 INFO req_id=18d48b3c-104a-4f49-b955-021c53c09ad6 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,094 INFO req_id=0c6c20ef-c78e-4d92-86d0-858c4711953d ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,095 INFO req_id=3bb01127-abd0-4fc1-90b0-61282872500f ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,095 INFO req_id=56086f52-21f8-4970-9e54-92a5b255bb79 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,096 INFO req_id=21073e33-500a-4fd7-ad65-1fdd64b7ff72 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,096 INFO req_id=71eb9c4c-9d51-4407-b406-fc058f8c8513 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:43,097 INFO req_id=50c98ad4-36e5-4355-b0c7-f4b77795f139 ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:29:43,098 INFO req_id=d63a022f-a09b-428e-bd2a-1c092efe937a ip=127.0.0.1 method=POST path=/tasks/execute
+2025-10-28 12:29:43,099 INFO req_id=057b210e-b878-4e53-8d13-258a19b63cfa ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:29:56,372 INFO Serving on 127.0.0.1:8090
+2025-10-28 12:29:56,666 INFO req_id=941d1f90-1841-4621-969f-7d59299eab28 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,670 INFO req_id=3ef32204-654a-44a4-b1c1-77eb206c90ef ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:29:56,671 INFO req_id=2abf558a-fdf3-405c-b4d2-be5242663d81 ip=127.0.0.1 method=POST path=/firewall/block
+2025-10-28 12:29:56,672 INFO firewall add cidr=127.0.0.1/32
+2025-10-28 12:29:56,672 INFO req_id=cf0e2709-1f2b-47b9-979a-ba00e23e836e ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,673 INFO req_id=a9b812d6-03dc-4d8d-90de-4aa77fc97c09 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,675 INFO req_id=52efaf29-1304-46dc-a4c2-d3f253fea4d1 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,676 INFO req_id=8297f959-c690-4c56-89ce-b6f36a415555 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,677 INFO req_id=87ea3d06-b997-4ba4-868d-1d669ffbbf84 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,677 INFO req_id=5768c003-b623-4a02-a8bc-6dd16b478605 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,678 INFO req_id=22ffb2f0-b938-4fc0-849b-b4dc1bfabd0d ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,679 INFO req_id=cebe6276-af4b-472e-97f0-973d6839b617 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,680 INFO req_id=2bbd1b02-4416-44c4-aac1-615a709bf7b2 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,680 INFO req_id=dc2e7efb-2aca-481b-9a26-2a45823a2193 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,681 INFO req_id=6bcd1c91-a540-4d8d-9ce6-83b5386a7e9b ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,682 INFO req_id=e909b858-4c2d-44e7-91a2-32783d0b54b5 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,682 INFO req_id=fe680227-6117-4331-9700-95cf334021ed ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,683 INFO req_id=29b6c908-cb31-4ca6-8b5e-02f9e6595121 ip=127.0.0.1 method=GET path=/health
+2025-10-28 12:29:56,684 INFO req_id=c398f693-a74e-4c77-b5f2-9ba088dfe344 ip=127.0.0.1 method=POST path=/security/check
+2025-10-28 12:29:56,685 INFO req_id=667a4af9-2010-48a7-95bb-f4e3a3b2e6bb ip=127.0.0.1 method=POST path=/tasks/execute
+2025-10-28 12:29:56,687 INFO req_id=3da1aa87-29d3-4598-96ce-f023dc229ac1 ip=127.0.0.1 method=POST path=/security/check
