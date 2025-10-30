@@ -1,0 +1,19 @@
+{
+  "allowList": ["127.0.0.1", "192.168.1.10"],
+  "blockList": ["10.0.0.5"],
+  "integrityFiles": [
+    { "path": "C:\\Users\\Public\\test.txt", "knownHash": "" }
+  ],
+  "processAllowList": ["explorer.exe", "svchost.exe", "cmd.exe", "powershell.exe", "node.exe"],
+  "processBlockList": ["mimikatz.exe", "nc.exe", "netcat.exe"],
+  "expectedPorts": [80, 443],
+  "usbWatchIntervalSec": 60,
+  "integrityIntervalSec": 300,
+  "processIntervalSec": 60,
+  "portsIntervalSec": 120,
+  "healthIntervalSec": 60,
+  "updatesIntervalSec": 3600,
+  "logDir": "C:\\SecurityAgent\\logs",
+  "cpuLoadWarn": 0.9,
+  "memFreeWarnMB": 512
+}
